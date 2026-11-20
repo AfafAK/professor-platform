@@ -1,0 +1,36 @@
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# Secrets
+.env
+.env.*
+
+# Database
+db.sqlite3
+*.sqlite3
+
+# User uploaded files
+media/
+
+# Logs
+*.log
+run_status.txt
+server_output.txt
+
+# Temporary documentation - review before publishing
+Rapport_PFE.md
+resume_projet.txt
+
+# Editor files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

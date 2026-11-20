@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Résultats du Quiz - ProfPlatform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animated-fade">
+    <div class="col-lg-6 col-md-8">
+        <div class="card-glass p-5 text-center mt-4">
+            {% if passed %}
+                <div class="text-success mb-4">
+                    <i class="fa-solid fa-circle-check fa-bounce" style="font-size: 4.5rem; color: #10b981;"></i>
+                </div>
+                <span class="badge bg-success py-2 px-3 mb-3">RÉUSSI</span>
+                <h2 class="text-gradient">Félicitations !</h2>
+                <p class="text-muted-custom mt-2">Vous avez validé avec succès le module « {{ module.title }} ».</p>
+            {% else %}
+                <div class="text-danger mb-4">
+                    <i class="fa-solid fa-circle-xmark fa-shake" style="font-size: 4.5rem; color: #ef4444;"></i>
+                </div>
+                <span class="badge bg-danger py-2 px-3 mb-3">ÉCHOUÉ</span>
+                <h2 class="text-danger">Score insuffisant</h2>
+                <p class="text-muted-custom mt-2">Vous n'avez pas atteint le score requis pour valider ce module.</p>
+            {% endif %}
+
+            <div class="my-4 py-4 px-3 bg-secondary bg-opacity-10 border border-secondary rounded">
+                <div class="row">
+                    <div class="col-6 border-end border-secondary">
+                        <div class="small text-muted-custom">Votre score</div>
+                        <div class="fs-2 font-weight-bold {% if passed %}text-success{% else %}text-danger{% endif %}">{{ score }}%</div>
+                        <div class="small text-muted-custom">({{ correct_count }}/{{ total_questions }} correct)</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="small text-muted-custom">Score requis</div>
+                        <div class="fs-2 font-weight-bold text-white">{{ quiz.passing_score }}%</div>
+                        <div class="small text-muted-custom">pour validation</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                {% if passed %}
+                    <a href="/elearning/training/{{ module.training.id }}/" class="btn btn-primary-custom py-3 font-weight-bold">
+                        <i class="fa-solid fa-circle-chevron-right me-2"></i> Retour au programme
+                    </a>
+                {% else %}
+                    <a href="/elearning/quiz/{{ quiz.id }}/" class="btn btn-primary-custom py-3 font-weight-bold">
+                        <i class="fa-solid fa-arrow-rotate-left me-2"></i> Réessayer le Quiz
+                    </a>
+                    <a href="/elearning/module/{{ module.id }}/" class="btn btn-secondary-custom py-3">
+                        <i class="fa-solid fa-book-open me-2"></i> Revoir le cours
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

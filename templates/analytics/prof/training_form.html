@@ -1,0 +1,41 @@
+{% extends "analytics/prof/dashboard_layout.html" %}
+
+{% block subtitle %}{{ title }}{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'manage_elearning' %}" class="text-secondary">E-learning</a></li>
+<li class="breadcrumb-item active text-white" aria-current="page">{{ title }}</li>
+{% endblock %}
+
+{% block prof_content %}
+<div class="row animated-fade justify-content-center">
+    <div class="col-lg-8">
+        <div class="card-glass p-4">
+            <h2 class="text-white mt-0 mb-4"><i class="fa-solid fa-graduation-cap text-primary me-2"></i> {{ title }}</h2>
+
+            <form method="post" enctype="multipart/form-data" class="space-y-4">
+                {% csrf_token %}
+
+                <div class="row">
+                    {% for field in form %}
+                        <div class="col-12 mb-3">
+                            <label class="form-label text-white font-semibold">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ field.errors.as_text }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="flex justify-end gap-2 mt-4 pt-3 border-top border-secondary">
+                    <a href="{% url 'manage_elearning' %}" class="btn btn-secondary-custom">Annuler</a>
+                    <button type="submit" class="btn btn-primary-custom">Enregistrer la formation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

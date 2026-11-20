@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}[Prévisualisation] {{ news.title }} - ProfPlatform{% endblock %}
+
+{% block content %}
+<div class="row animated-fade justify-content-center mt-4">
+    <div class="col-lg-10">
+        <div class="alert alert-info border-secondary text-white text-center py-2" style="background: rgba(59, 130, 246, 0.1);">
+            <i class="fa-solid fa-eye me-2"></i> Mode Prévisualisation Enseignant
+        </div>
+
+        <div class="card-glass p-4 mb-4">
+            <span class="badge-custom badge-level mb-2"><i class="fa-regular fa-clock me-1"></i> Publié le {{ news.created_at|date:"d F Y à H:i" }}</span>
+            <h1 class="text-white mt-2 mb-3">{{ news.title }}</h1>
+
+            {% if news.image %}
+                <img src="{{ news.image.url }}" alt="{{ news.title }}" class="img-fluid rounded border border-secondary w-100 mb-4" style="max-height: 400px; object-fit: cover;">
+            {% endif %}
+
+            <div class="text-white lead mb-4" style="white-space: pre-line;">{{ news.content }}</div>
+
+            <!-- Attachments -->
+            {% if news.attachments.all %}
+                <hr class="border-secondary my-4">
+                <h4 class="text-white mb-3"><i class="fa-solid fa-paperclip text-primary me-2"></i> Documents & Fichiers Attachés</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {% for att in news.attachments.all %}
+                        <div class="p-3 rounded bg-white/[0.03] border border-white/[0.05] flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-file-pdf text-danger fs-4"></i>
+                                <span class="text-white text-sm truncate max-w-xs">{{ att.file.name|slice:"17:" }}</span>
+                            </div>
+                            <a href="{{ att.file.url }}" target="_blank" class="btn btn-secondary-custom btn-sm">Ouvrir</a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="text-center">
+            <button onclick="window.close()" class="btn btn-secondary-custom px-4"><i class="fa-solid fa-xmark me-2"></i> Fermer l'onglet</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

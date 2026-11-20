@@ -1,0 +1,62 @@
+{% extends "analytics/prof/dashboard_layout.html" %}
+
+{% block subtitle %}Questions du Quiz{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'manage_elearning' %}" class="text-secondary">E-learning</a></li>
+<li class="breadcrumb-item active text-white" aria-current="page">Questions du Quiz</li>
+{% endblock %}
+
+{% block prof_content %}
+<div class="row animated-fade">
+    <div class="col-12 mb-4 flex justify-between items-center flex-wrap gap-3">
+        <div>
+            <h2 class="text-white mt-0 mb-1">Questions : {{ quiz.title }}</h2>
+            <p class="text-muted-custom mb-0 text-sm">Module : {{ quiz.module.title }}</p>
+        </div>
+        <a href="{% url 'create_question' quiz.id %}" class="btn btn-primary-custom"><i class="fa-solid fa-plus me-2"></i> Ajouter Question</a>
+    </div>
+
+    <!-- Questions list -->
+    <div class="col-12 mb-4">
+        {% if questions %}
+            <div class="space-y-4">
+                {% for question in questions %}
+                    <div class="card-glass p-4">
+                        <div class="flex justify-between items-start mb-3 pb-3 border-bottom border-white/[0.05]">
+                            <h4 class="text-white mb-0 flex-grow font-semibold text-base leading-snug">
+                                Q{{ forloop.counter }} : {{ question.text }}
+                                <span class="badge bg-secondary font-normal text-xs ms-2">{{ question.points }} point(s)</span>
+                            </h4>
+                            <div class="flex gap-1.5 ms-3">
+                                <a href="{% url 'edit_question' question.id %}" class="btn btn-xs btn-secondary-custom" title="Modifier"><i class="fa-solid fa-pen-to-square text-primary"></i></a>
+                                <form action="{% url 'delete_question' question.id %}" method="post" class="d-inline" onsubmit="return confirm('Supprimer cette question du quiz ?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-xs btn-secondary-custom" title="Supprimer"><i class="fa-solid fa-trash text-danger"></i></button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Choices options -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                            {% for choice in question.choices.all %}
+                                <div class="p-2.5 rounded-lg border {% if choice.is_correct %}border-success bg-success/5 text-success{% else %}border-white/5 bg-white/[0.01] text-muted-custom{% endif %} text-sm flex items-center justify-between">
+                                    <span>{{ choice.text }}</span>
+                                    {% if choice.is_correct %}
+                                        <span class="badge bg-success text-white text-xs">Correcte</span>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5 card-glass">
+                <i class="fa-solid fa-clipboard-question fs-1 text-muted-custom mb-2"></i>
+                <p class="text-muted-custom">Aucune question présente dans ce quiz. Ajoutez-en en haut à droite !</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

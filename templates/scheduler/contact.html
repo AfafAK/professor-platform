@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Contact & RDV - ProfPlatform{% endblock %}
+
+{% block extra_css %}
+<!-- FullCalendar CSS CDN -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.min.css" rel="stylesheet">
+<style>
+    .fc-event {
+        cursor: pointer;
+    }
+    #calendar {
+        background: var(--bg-glass);
+        padding: 1.5rem;
+        border-radius: 16px;
+        border: 1px solid var(--border-glass);
+        box-shadow: var(--card-shadow);
+        min-height: 500px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row animated-fade">
+    <div class="col-12 mb-4">
+        <div class="text-center">
+            <span class="badge-custom">CONTACT</span>
+            <h1 class="mt-2 text-gradient">Prendre Contact ou Rendez-vous</h1>
+            <p class="text-muted-custom">Envoyez un message direct par formulaire ou réservez un créneau de réunion pédagogique directement sur le calendrier ci-dessous.</p>
+        </div>
+    </div>
+
+    <!-- Contact Form Column -->
+    <div class="col-lg-5 mb-4">
+        <div class="card-glass h-100">
+            <h3 class="mb-4 text-white"><i class="fa-solid fa-envelope text-primary me-2"></i> Formulaire de Contact</h3>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label text-white">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <div class="text-danger small mt-1"><i class="fa-solid fa-triangle-exclamation me-1"></i> {{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+
+                <!-- Google reCAPTCHA widget -->
+                <div class="mb-3">
+                    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+                    <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}"></div>
+                </div>
+
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-primary-custom py-3"><i class="fa-solid fa-paper-plane me-2"></i> Envoyer le message</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Appointment Scheduling Column -->
+    <div class="col-lg-7 mb-4">
+        <div class="h-100">
+            <h3 class="mb-4 text-white"><i class="fa-solid fa-calendar-check text-primary me-2"></i> Calendrier des Rendez-vous</h3>
+            <div id="calendar"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Booking Modal -->
+<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-glass p-0">
+            <div class="modal-header border-secondary px-4 py-3">
+                <h5 class="modal-title" id="bookingModalLabel"><i class="fa-solid fa-calendar-plus text-primary me-2"></i> Réserver le créneau</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-4">
+                <div class="alert alert-info py-2 px-3 small border-info text-info mb-3">
+                    <i class="fa-solid fa-circle-info me-2"></i>
+                    Créneau choisi : <b id="modal-date-time">--/--/---- --:--</b>
+                </div>
+
+                <form id="booking-form" novalidate>
+                    <input type="hidden" id="modal-slot-id">
+
+                    <div class="mb-3">
+                        <label for="modal-student-name" class="form-label">Votre nom complet</label>
+                        <input type="text" id="modal-student-name" class="form-control form-control-custom"
+                               value="{% if user.is_authenticated %}{{ user.first_name }} {{ user.last_name }}{% endif %}" placeholder="Ex: Jean Dupont" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modal-student-email" class="form-label">Votre adresse e-mail</label>
+                        <input type="email" id="modal-student-email" class="form-control form-control-custom"
+                               value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" placeholder="Ex: jean.dupont@etu.univ.fr" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modal-student-notes" class="form-label">Objet du rendez-vous / Notes</label>
+                        <textarea id="modal-student-notes" class="form-control form-control-custom" rows="3" placeholder="Indiquez le sujet de votre question ou la matière concernée..."></textarea>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="button" onclick="submitBooking()" class="btn btn-primary-custom py-2"><i class="fa-solid fa-check me-2"></i> Confirmer la réservation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- FullCalendar Script Bundle CDN -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/fr.global.min.js"></script>
+<script>
+    let calendar;
+    let bookingModal;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+        const calendarEl = document.getElementById('calendar');
+
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            locale: 'fr',
+            initialView: 'timeGridWeek',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'timeGridWeek,timeGridDay'
+            },
+            slotMinTime: '08:00:00',
+            slotMaxTime: '19:00:00',
+            allDaySlot: false,
+            events: '/contact/api/slots/',
+            eventClick: function(info) {
+                const isBooked = info.event.extendedProps.isBooked;
+                if (isBooked) {
+                    alert("Ce créneau est déjà réservé.");
+                    return;
+                }
+
+                // Show booking modal for open slot
+                document.getElementById('modal-slot-id').value = info.event.id;
+
+                const startStr = new Date(info.event.start).toLocaleString('fr-FR', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+                document.getElementById('modal-date-time').innerText = startStr;
+
+                bookingModal.show();
+            }
+        });
+
+        calendar.render();
+    });
+
+    function submitBooking() {
+        const slotId = document.getElementById('modal-slot-id').value;
+        const name = document.getElementById('modal-student-name').value.trim();
+        const email = document.getElementById('modal-student-email').value.trim();
+        const notes = document.getElementById('modal-student-notes').value.trim();
+
+        if (!name || !email) {
+            alert("Veuillez remplir votre nom et votre adresse e-mail.");
+            return;
+        }
+
+        // Post booking details
+        fetch(`/contact/api/book/${slotId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                name: name,
+                email: email,
+                notes: notes
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                bookingModal.hide();
+                calendar.refetchEvents();
+            } else {
+                alert("Erreur: " + data.error);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Une erreur s'est produite lors de la réservation.");
+        });
+    }
+</script>
+{% endblock %}

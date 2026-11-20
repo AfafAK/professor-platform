@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Publications & Recherche - ProfPlatform{% endblock %}
+
+{% block content %}
+<div class="row animated-fade">
+    <div class="col-12 mb-4">
+        <div class="text-center">
+            <span class="badge-custom">ACADÉMIQUE</span>
+            <h1 class="mt-2 text-gradient">Travaux de Recherche & Publications</h1>
+            <p class="text-muted-custom">Découvrez les projets scientifiques en cours, les collaborations et les articles publiés dans des revues internationales et des conférences.</p>
+        </div>
+    </div>
+
+    <!-- Navigation Tab Pills -->
+    <div class="col-12 mb-4 text-center">
+        <div class="d-inline-flex gap-2 card-glass p-2">
+            <button class="btn btn-primary-custom btn-sm" id="btn-projects" onclick="switchTab('projects')"><i class="fa-solid fa-flask-vial me-1"></i> Projets de Recherche</button>
+            <button class="btn btn-secondary-custom btn-sm" id="btn-publications" onclick="switchTab('publications')"><i class="fa-solid fa-book-open-reader me-1"></i> Publications Scientifiques</button>
+        </div>
+    </div>
+
+    <!-- Section 1: Research Projects (Active by default) -->
+    <div class="col-12 tab-content" id="tab-projects-content">
+        <!-- Active Projects -->
+        <h3 class="mb-4 text-gradient"><i class="fa-solid fa-bolt me-2 text-warning"></i> Projets Actifs / En cours</h3>
+        <div class="row mb-5">
+            {% if projects.current %}
+                {% for proj in projects.current %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card-glass card-glass-hover h-100 d-flex flex-column p-4">
+                            {% if proj.image %}
+                                <img src="{{ proj.image.url }}" alt="{{ proj.title }}" class="img-fluid rounded mb-3 border border-secondary" style="max-height: 200px; object-fit: cover;">
+                            {% endif %}
+                            <h4 class="h5 text-white mb-2">{{ proj.title }}</h4>
+                            <span class="badge-custom badge-tag small mb-2"><i class="fa-regular fa-calendar-check me-1"></i> Début : {{ proj.start_date|date:"F Y" }}</span>
+
+                            <p class="text-muted-custom small flex-grow-1" style="white-space: pre-line;">{{ proj.description }}</p>
+
+                            {% if proj.partners %}
+                                <div class="mt-3 text-muted-custom small">
+                                    <strong>Partenaires :</strong> {{ proj.partners }}
+                                </div>
+                            {% endif %}
+                            {% if proj.funding %}
+                                <div class="text-muted-custom small">
+                                    <strong>Financement :</strong> {{ proj.funding }}
+                                </div>
+                            {% endif %}
+
+                            {% if proj.project_link %}
+                                <div class="mt-3">
+                                    <a href="{{ proj.project_link }}" target="_blank" class="btn btn-secondary-custom btn-sm w-100"><i class="fa-solid fa-arrow-up-right-from-square me-1"></i> En savoir plus</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="card-glass p-4 text-center">
+                        <p class="text-muted-custom mb-0">Aucun projet actif pour le moment.</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Future Opportunities & Past Projects -->
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <h3 class="mb-3"><i class="fa-solid fa-lightbulb me-2 text-info"></i> Opportunités & Projets futurs</h3>
+                {% if projects.future %}
+                    {% for proj in projects.future %}
+                        <div class="card-glass p-4 mb-3">
+                            <h4 class="h6 text-white mb-2">{{ proj.title }}</h4>
+                            <p class="text-muted-custom small mb-2">{{ proj.description }}</p>
+                            {% if proj.funding %}
+                                <span class="badge bg-dark border border-secondary text-info">{{ proj.funding }}</span>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="card-glass p-4 text-center">
+                        <p class="text-muted-custom mb-0">Aucune opportunité listée pour le moment.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <h3 class="mb-3"><i class="fa-solid fa-circle-check me-2 text-success"></i> Projets Finalisés / Passés</h3>
+                {% if projects.past %}
+                    {% for proj in projects.past %}
+                        <div class="card-glass p-4 mb-3">
+                            <h4 class="h6 text-white mb-2">{{ proj.title }}</h4>
+                            <p class="text-muted-custom small mb-1">{{ proj.description|truncatewords:20 }}</p>
+                            <span class="small text-muted-custom d-block"><i class="fa-regular fa-calendar-xmark me-1"></i> Terminé en : {{ proj.end_date|date:"Y" }}</span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="card-glass p-4 text-center">
+                        <p class="text-muted-custom mb-0">Aucun projet historique listé.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: Publications List (Hidden by default) -->
+    <div class="col-12 tab-content d-none" id="tab-publications-content">
+        <h3 class="mb-4"><i class="fa-solid fa-file-invoice text-primary me-2"></i> Publications Scientifiques Récentes</h3>
+
+        {% if publications %}
+            {% for pub in publications %}
+                <div class="card-glass p-4 mb-3">
+                    <div class="d-flex align-items-start">
+                        <div class="me-3 mt-1 text-primary">
+                            {% if pub.pub_type == 'JOURNAL' %}
+                                <i class="fa-solid fa-file-lines fs-4" title="Revue"></i>
+                            {% elif pub.pub_type == 'CONF' %}
+                                <i class="fa-solid fa-comments fs-4" title="Conférence"></i>
+                            {% elif pub.pub_type == 'BOOK' %}
+                                <i class="fa-solid fa-book-open fs-4" title="Livre"></i>
+                            {% else %}
+                                <i class="fa-solid fa-paperclip fs-4"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <span class="badge-custom badge-tag btn-sm py-0 px-2 font-weight-bold" style="font-size: 0.7rem;">{{ pub.get_pub_type_display }}</span>
+                            <span class="text-muted-custom small ms-2">{{ pub.year }}</span>
+
+                            <h4 class="h5 mt-2 text-white">{{ pub.title }}</h4>
+                            <p class="text-muted-custom small mb-2"><b>Auteurs :</b> {{ pub.authors }}</p>
+                            <p class="small text-secondary mb-3"><i>{{ pub.journal_or_book }}</i>, {{ pub.pages }}</p>
+
+                            {% if pub.abstract %}
+                                <p class="text-muted-custom small mb-3 bg-dark bg-opacity-25 p-3 rounded" style="font-style: italic; white-space: pre-line;">
+                                    <b>Résumé :</b> {{ pub.abstract }}
+                                </p>
+                            {% endif %}
+
+                            <!-- Resource links -->
+                            <div class="d-flex flex-wrap gap-2">
+                                {% if pub.pdf_file %}
+                                    <a href="{{ pub.pdf_file.url }}" target="_blank" class="btn btn-secondary-custom btn-sm"><i class="fa-solid fa-file-pdf text-danger me-1"></i> Télécharger PDF</a>
+                                {% endif %}
+                                {% if pub.code_link %}
+                                    <a href="{{ pub.code_link }}" target="_blank" class="btn btn-secondary-custom btn-sm"><i class="fa-brands fa-github me-1 text-white"></i> Code Source</a>
+                                {% endif %}
+                                {% if pub.data_link %}
+                                    <a href="{{ pub.data_link }}" target="_blank" class="btn btn-secondary-custom btn-sm"><i class="fa-solid fa-database me-1 text-info"></i> Jeu de Données</a>
+                                {% endif %}
+                                {% if pub.doi %}
+                                    <span class="btn btn-dark btn-sm border border-secondary text-secondary disabled">DOI: {{ pub.doi }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="card-glass p-5 text-center">
+                <p class="text-muted-custom mb-0">Aucune publication scientifique n'est encore répertoriée.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function switchTab(tabId) {
+        const btnProjects = document.getElementById('btn-projects');
+        const btnPublications = document.getElementById('btn-publications');
+        const contentProjects = document.getElementById('tab-projects-content');
+        const contentPublications = document.getElementById('tab-publications-content');
+
+        if (tabId === 'projects') {
+            // Button Styles
+            btnProjects.className = 'btn btn-primary-custom btn-sm';
+            btnPublications.className = 'btn btn-secondary-custom btn-sm';
+            // Display Area
+            contentProjects.classList.remove('d-none');
+            contentPublications.classList.add('d-none');
+        } else {
+            // Button Styles
+            btnProjects.className = 'btn btn-secondary-custom btn-sm';
+            btnPublications.className = 'btn btn-primary-custom btn-sm';
+            // Display Area
+            contentProjects.classList.add('d-none');
+            contentPublications.classList.remove('d-none');
+        }
+    }
+</script>
+{% endblock %}

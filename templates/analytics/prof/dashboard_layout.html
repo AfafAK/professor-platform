@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}{% block subtitle %}Tableau de Bord Enseignant{% endblock %} - ProfPlatform{% endblock %}
+
+{% block extra_css %}
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    corePlugins: {
+      preflight: false, // Prevent Tailwind reset from breaking existing Bootstrap styles!
+    }
+  }
+</script>
+<style>
+    /* Highly specific inline overrides to bypass browser caching of style.css */
+    html[data-theme="light"] .text-white:not(.badge):not(.btn):not(.alert) {
+        color: var(--text-primary) !important;
+    }
+    html[data-theme="light"] .text-theme-primary {
+        color: var(--text-primary) !important;
+    }
+    html[data-theme="light"] .text-theme-secondary {
+        color: var(--text-secondary) !important;
+    }
+    html[data-theme="light"] .table td,
+    html[data-theme="light"] .table th {
+        color: var(--text-primary) !important;
+    }
+
+    .table,
+    .table > :not(caption) > * > * {
+        background-color: transparent !important;
+    }
+    .table-hover tbody tr:hover td,
+    .table-hover tbody tr:hover th {
+        background-color: var(--bg-hover) !important;
+    }
+
+    /* Premium Sidebar styles */
+    .dashboard-wrapper {
+        display: flex;
+        min-height: calc(100vh - 120px);
+        margin-top: 20px;
+        gap: 25px;
+        flex-direction: row;
+    }
+    .sidebar-prof {
+        width: 260px;
+        flex-shrink: 0;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: 16px;
+        padding: 20px;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        height: fit-content;
+    }
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        color: var(--text-secondary) !important;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: var(--transition-smooth);
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+    .sidebar-link:hover, .sidebar-link.active {
+        color: var(--text-primary) !important;
+        background: var(--bg-hover);
+    }
+    .sidebar-link.active {
+        border-left: 3px solid var(--accent-blue);
+    }
+    .content-prof {
+        flex-grow: 1;
+        min-width: 0;
+    }
+    .badge-unread {
+        background: var(--accent-danger);
+        color: white;
+        font-size: 0.75rem;
+        padding: 2px 6px;
+        border-radius: 10px;
+        margin-left: auto;
+    }
+    .breadcrumb-item a {
+        text-decoration: none;
+    }
+    .table-container-custom {
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+
+    @media (max-width: 991.98px) {
+        .dashboard-wrapper {
+            flex-direction: column;
+        }
+        .sidebar-prof {
+            width: 100%;
+        }
+    }
+</style>
+{% block prof_css %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- Sidebar -->
+    <div class="sidebar-prof">
+        <div class="text-center mb-4">
+            <span class="badge-custom">ESPACE ENSEIGNANT</span>
+            <h5 class="text-white mt-2 mb-0">Espace de Gestion</h5>
+        </div>
+        <nav class="nav flex-column">
+            <a href="{% url 'professor_dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'professor_dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-chart-pie"></i> Vue d'ensemble
+            </a>
+            <a href="{% url 'manage_publications' %}" class="sidebar-link {% if 'publications' in request.path %}active{% endif %}">
+                <i class="fa-solid fa-newspaper"></i> Publications & Actus
+            </a>
+            <a href="{% url 'manage_courses' %}" class="sidebar-link {% if 'courses' in request.path %}active{% endif %}">
+                <i class="fa-solid fa-book"></i> Cours & Matières
+            </a>
+            <a href="{% url 'manage_resources' %}" class="sidebar-link {% if 'resources' in request.path %}active{% endif %}">
+                <i class="fa-solid fa-folder-open"></i> Supports de cours
+            </a>
+            <a href="{% url 'manage_elearning' %}" class="sidebar-link {% if 'elearning' in request.path %}active{% endif %}">
+                <i class="fa-solid fa-laptop-code"></i> E-learning & Quiz
+            </a>
+            <a href="{% url 'manage_students' %}" class="sidebar-link {% if 'students' in request.path %}active{% endif %}">
+                <i class="fa-solid fa-users-gear"></i> Suivi Étudiants
+            </a>
+            <a href="{% url 'manage_appointments' %}" class="sidebar-link {% if 'appointments' in request.path %}active{% endif %}">
+                <i class="fa-solid fa-calendar-days"></i> Rendez-vous
+            </a>
+            <a href="{% url 'manage_contact_messages' %}" class="sidebar-link {% if 'messages' in request.path %}active{% endif %}">
+                <i class="fa-solid fa-envelope"></i> Messages Reçus
+            </a>
+            <a href="{% url 'manage_notifications' %}" class="sidebar-link {% if 'notifications' in request.path %}active{% endif %}">
+                <i class="fa-solid fa-bell"></i> Notifications
+                {% if unread_notifications_count > 0 %}
+                    <span class="badge-unread">{{ unread_notifications_count }}</span>
+                {% endif %}
+            </a>
+            <a href="{% url 'manage_profile' %}" class="sidebar-link {% if 'profile' in request.path %}active{% endif %}">
+                <i class="fa-solid fa-user-gear"></i> Mon Profil
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content Panel -->
+    <div class="content-prof">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-secondary">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'professor_dashboard' %}" class="text-secondary">Dashboard</a></li>
+                {% block breadcrumb_items %}{% endblock %}
+            </ol>
+        </nav>
+
+        <!-- Alerts and Messages -->
+        {% if messages %}
+            {% for msg in messages %}
+                <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %} alert-dismissible fade show" role="alert" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); color: var(--text-primary);">
+                    {{ msg }}
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block prof_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% block prof_js %}{% endblock %}
+{% endblock %}

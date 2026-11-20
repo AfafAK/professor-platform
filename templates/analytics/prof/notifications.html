@@ -1,0 +1,138 @@
+{% extends "analytics/prof/dashboard_layout.html" %}
+
+{% block subtitle %}Notifications{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active text-white" aria-current="page">Notifications</li>
+{% endblock %}
+
+{% block prof_content %}
+<div class="row animated-fade">
+    <div class="col-12 mb-4 flex justify-between items-center">
+        <div>
+            <h2 class="text-white mt-0 mb-1">Centre de Notifications</h2>
+            <p class="text-muted-custom mb-0 text-sm">Consultez les dernières activités de votre plateforme académique.</p>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="col-12 mb-4">
+        <div class="card-glass p-0 overflow-hidden">
+            {% if page_obj.object_list %}
+                <div class="divide-y divide-white/[0.05]">
+                    {% for notif in page_obj.object_list %}
+                        <div class="p-4 flex justify-between items-start gap-3 transition-colors {% if not notif.is_read %}bg-white/[0.02]{% endif %}" data-notif-id="{{ notif.id }}">
+                            <div class="flex items-start gap-3">
+                                <!-- Type Icon -->
+                                <div class="w-9 h-9 rounded-full bg-white/[0.05] flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    {% if notif.type == 'REGISTRATION' %}
+                                        <i class="fa-solid fa-user-plus text-primary"></i>
+                                    {% elif notif.type == 'APPOINTMENT' %}
+                                        <i class="fa-solid fa-calendar-check text-warning"></i>
+                                    {% elif notif.type == 'COMMENT' %}
+                                        <i class="fa-solid fa-comments text-info"></i>
+                                    {% elif notif.type == 'QUIZ' %}
+                                        <i class="fa-solid fa-circle-question text-success"></i>
+                                    {% elif notif.type == 'CERTIFICATE' %}
+                                        <i class="fa-solid fa-award text-warning"></i>
+                                    {% else %}
+                                        <i class="fa-solid fa-bell text-secondary"></i>
+                                    {% endif %}
+                                </div>
+
+                                <div>
+                                    <h5 class="text-white text-sm font-semibold mb-1">
+                                        {{ notif.title }}
+                                        {% if not notif.is_read %}
+                                            <span class="badge bg-danger ms-1 bg-opacity-75" style="font-size: 0.65rem;">Nouveau</span>
+                                        {% endif %}
+                                    </h5>
+                                    <p class="text-muted-custom text-sm mb-1 leading-snug">{{ notif.message }}</p>
+                                    <span class="text-muted-custom text-xs">{{ notif.created_at|date:"d F Y à H:i" }}</span>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-1">
+                                {% if not notif.is_read %}
+                                    <button class="btn btn-xs btn-secondary-custom mark-read-btn" title="Marquer comme lu"><i class="fa-solid fa-check text-success"></i></button>
+                                {% endif %}
+                                <form action="{% url 'delete_notification' notif.id %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-xs btn-secondary-custom" title="Supprimer"><i class="fa-solid fa-trash text-danger"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                    <div class="d-flex justify-content-center p-3 border-top border-secondary">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination pagination-sm mb-0">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item"><a class="page-link bg-transparent border-secondary text-secondary" href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+                                {% endif %}
+                                {% for num in page_obj.paginator.page_range %}
+                                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                        <a class="page-link {% if page_obj.number == num %}btn-primary-custom border-primary-custom{% else %}bg-transparent border-secondary text-secondary{% endif %}" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endfor %}
+                                {% if page_obj.has_next %}
+                                    <li class="page-item"><a class="page-link bg-transparent border-secondary text-secondary" href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5 text-muted-custom">
+                    <i class="fa-solid fa-bell-slash fs-1 mb-2"></i>
+                    <p class="mb-0">Vous n'avez reçu aucune notification.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block prof_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const markBtns = document.querySelectorAll(".mark-read-btn");
+
+        markBtns.forEach(btn => {
+            btn.addEventListener("click", function() {
+                const notifRow = btn.closest("[data-notif-id]");
+                const notifId = notifRow.getAttribute("data-notif-id");
+
+                fetch(`/dashboard/notifications/${notifId}/read/`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    }
+                }).then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        btn.remove();
+                        const badge = notifRow.querySelector(".badge-unread, .bg-danger");
+                        if(badge) badge.remove();
+                        notifRow.classList.remove("bg-white/[0.02]");
+
+                        // Decrement badge count in sidebar
+                        const sidebarBadge = document.querySelector(".badge-unread");
+                        if(sidebarBadge) {
+                            let count = parseInt(sidebarBadge.innerText) - 1;
+                            if(count > 0) {
+                                sidebarBadge.innerText = count;
+                            } else {
+                                sidebarBadge.remove();
+                            }
+                        }
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

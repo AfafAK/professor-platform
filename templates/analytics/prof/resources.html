@@ -1,0 +1,234 @@
+{% extends "analytics/prof/dashboard_layout.html" %}
+
+{% block subtitle %}Gestion des Supports{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active text-white" aria-current="page">Supports de cours</li>
+{% endblock %}
+
+{% block prof_content %}
+<div class="row animated-fade">
+    <div class="col-12 mb-4 flex justify-between items-center flex-wrap gap-3">
+        <div>
+            <h2 class="text-white mt-0 mb-1">Supports de cours & Documents</h2>
+            <p class="text-muted-custom mb-0 text-sm">Gérez les fichiers de cours, fiches de TD, sujets de TP et examens organisés par dossiers.</p>
+        </div>
+        <div>
+            {% if selected_subject %}
+                <a href="{% url 'create_resource' selected_subject %}" class="btn btn-primary-custom"><i class="fa-solid fa-plus me-2"></i> Téléverser un Fichier</a>
+            {% else %}
+                <button class="btn btn-primary-custom" disabled title="Sélectionnez d'abord un cours ci-dessous"><i class="fa-solid fa-plus me-2"></i> Téléverser un Fichier</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filter by Course (Subject) -->
+    <div class="col-12 mb-4">
+        <div class="card-glass p-3 flex flex-col md:flex-row gap-3 justify-between items-center">
+            <form method="get" class="flex gap-2 items-center flex-grow w-full">
+                <!-- Select Course -->
+                <select name="subject" class="form-select form-control-custom max-w-sm" onchange="this.form.submit()">
+                    <option value="">-- Sélectionnez un cours pour afficher/gérer ses supports --</option>
+                    {% for subj in subjects %}
+                        <option value="{{ subj.id }}" {% if selected_subject == subj.id|stringformat:"i" %}selected{% endif %}>[{{ subj.code }}] {{ subj.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <div class="input-group max-w-xs flex-grow ms-auto">
+                    <span class="input-group-text bg-transparent border-end-0 border-secondary"><i class="fa-solid fa-magnifying-glass text-secondary"></i></span>
+                    <input type="text" name="search" class="form-control form-control-custom border-start-0" placeholder="Nom du fichier..." value="{{ search }}">
+                </div>
+                <button type="submit" class="btn btn-secondary-custom">Rechercher</button>
+            </form>
+        </div>
+    </div>
+
+    {% if selected_subject %}
+        <!-- Drag & Drop Upload Zone -->
+        <div class="col-12 mb-4">
+            <div id="drop-zone" class="border-2 border-dashed border-white/20 rounded-2xl p-4 text-center cursor-pointer hover:border-primary-custom hover:bg-white/[0.01] transition-all">
+                <i class="fa-solid fa-cloud-arrow-up fs-2 text-primary mb-2"></i>
+                <h5 class="text-white mb-1">Glissez-déposez des fichiers ici</h5>
+                <p class="text-muted-custom small mb-0">ou cliquez pour choisir des fichiers (PDF, ZIP, DOCX, PPTX, MP4, etc.)</p>
+                <input type="file" id="file-input" class="hidden" multiple>
+            </div>
+            <!-- Progress bar -->
+            <div id="upload-progress-container" class="hidden mt-2 p-3 card-glass">
+                <div class="flex justify-between text-xs text-white mb-1">
+                    <span>Téléversement en cours...</span>
+                    <span id="upload-percentage">0%</span>
+                </div>
+                <div class="w-full bg-white/[0.05] rounded-full h-1.5">
+                    <div id="upload-progress-bar" class="bg-primary-custom h-1.5 rounded-full" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resources Folders & Lists -->
+        <div class="col-12 mb-4">
+            {% if resources_by_folder %}
+                <div class="space-y-4">
+                    {% for folder, resources in resources_by_folder.items %}
+                        <div class="card-glass p-4">
+                            <h4 class="text-white mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-folder text-warning"></i>
+                                {{ folder }}
+                                <span class="badge bg-secondary font-normal text-xs">{{ resources|length }} fichier(s)</span>
+                            </h4>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr class="text-muted-custom">
+                                            <th>Titre du support</th>
+                                            <th>Type</th>
+                                            <th class="text-center">Téléchargements</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for res in resources %}
+                                            <tr>
+                                                <td>
+                                                    <div class="font-semibold text-white">
+                                                        {% if res.resource_type == 'COURS' %}
+                                                            <i class="fa-solid fa-book text-primary me-2"></i>
+                                                        {% elif res.resource_type == 'TD' %}
+                                                            <i class="fa-solid fa-file-invoice text-info me-2"></i>
+                                                        {% elif res.resource_type == 'TP' %}
+                                                            <i class="fa-solid fa-laptop-code text-success me-2"></i>
+                                                        {% elif res.resource_type == 'EXAM' %}
+                                                            <i class="fa-solid fa-circle-question text-danger me-2"></i>
+                                                        {% else %}
+                                                            <i class="fa-solid fa-circle-info text-secondary me-2"></i>
+                                                        {% endif %}
+                                                        {{ res.title }}
+                                                    </div>
+                                                    <span class="text-muted-custom small">{{ res.description|truncatewords:15 }}</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-secondary">{{ res.get_resource_type_display }}</span>
+                                                </td>
+                                                <td class="text-center text-white font-semibold">
+                                                    {{ res.download_count }}
+                                                </td>
+                                                <td class="text-end">
+                                                    <div class="flex justify-end gap-1.5">
+                                                        <a href="{% url 'edit_resource' res.id %}" class="btn btn-sm btn-secondary-custom" title="Modifier">
+                                                            <i class="fa-solid fa-pen-to-square text-primary"></i>
+                                                        </a>
+                                                        <form action="{% url 'delete_resource' res.id %}" method="post" class="d-inline" onsubmit="return confirm('Supprimer ce support définitivement ?');">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-sm btn-secondary-custom" title="Supprimer">
+                                                                <i class="fa-solid fa-trash text-danger"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5 card-glass">
+                    <i class="fa-solid fa-folder-minus fs-1 mb-2 text-muted-custom"></i>
+                    <p class="mb-0 text-muted-custom">Aucune ressource présente dans ce cours.</p>
+                </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="col-12">
+            <div class="text-center py-5 card-glass">
+                <i class="fa-solid fa-arrow-pointer fs-1 mb-2 text-primary"></i>
+                <h4 class="text-white">Sélectionnez un cours académique</h4>
+                <p class="text-muted-custom">Choisissez une matière dans la liste déroulante ci-dessus pour gérer ses documents d'accompagnement.</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block prof_js %}
+{% if selected_subject %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const dropZone = document.getElementById("drop-zone");
+        const fileInput = document.getElementById("file-input");
+        const progressContainer = document.getElementById("upload-progress-container");
+        const progressBar = document.getElementById("upload-progress-bar");
+        const percentageText = document.getElementById("upload-percentage");
+
+        dropZone.addEventListener("click", () => fileInput.click());
+
+        dropZone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropZone.classList.add("border-primary-custom", "bg-white/[0.02]");
+        });
+
+        dropZone.addEventListener("dragleave", () => {
+            dropZone.classList.remove("border-primary-custom", "bg-white/[0.02]");
+        });
+
+        dropZone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropZone.classList.remove("border-primary-custom", "bg-white/[0.02]");
+            const files = e.dataTransfer.files;
+            if(files.length > 0) {
+                uploadFiles(files);
+            }
+        });
+
+        fileInput.addEventListener("change", () => {
+            if(fileInput.files.length > 0) {
+                uploadFiles(fileInput.files);
+            }
+        });
+
+        function uploadFiles(files) {
+            progressContainer.classList.remove("hidden");
+            progressBar.style.width = "0%";
+            percentageText.innerText = "0%";
+
+            // Loop upload
+            let uploadedCount = 0;
+            const totalFiles = files.length;
+
+            for (let i = 0; i < files.length; i++) {
+                const formData = new FormData();
+                formData.append("file", files[i]);
+                formData.append("title", files[i].name.split('.').slice(0, -1).join('.'));
+                formData.append("resource_type", "COURS");
+
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", "{% url 'create_resource' selected_subject %}", true);
+                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+                xhr.setRequestHeader("x-requested-with", "XMLHttpRequest");
+
+                xhr.upload.addEventListener("progress", (e) => {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        progressBar.style.width = percent + "%";
+                        percentageText.innerText = percent + "%";
+                    }
+                });
+
+                xhr.onload = () => {
+                    uploadedCount++;
+                    if (uploadedCount === totalFiles) {
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 800);
+                    }
+                };
+
+                xhr.send(formData);
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

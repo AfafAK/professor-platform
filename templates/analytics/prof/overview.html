@@ -1,0 +1,178 @@
+{% extends "analytics/prof/dashboard_layout.html" %}
+
+{% block subtitle %}Vue d'ensemble{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active text-white" aria-current="page">Vue d'ensemble</li>
+{% endblock %}
+
+{% block prof_content %}
+<div class="row animated-fade">
+    <!-- Stat Cards -->
+    <div class="col-12 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4">
+            <!-- Card 1 -->
+            <div class="card-glass p-4 text-center">
+                <i class="fa-solid fa-users text-primary fs-3 mb-2"></i>
+                <div class="text-muted-custom small uppercase tracking-wider">Étudiants</div>
+                <h3 class="text-white mt-1 mb-0 font-bold">{{ total_students }}</h3>
+            </div>
+            <!-- Card 2 -->
+            <div class="card-glass p-4 text-center">
+                <i class="fa-solid fa-book text-success fs-3 mb-2"></i>
+                <div class="text-muted-custom small uppercase tracking-wider">Cours</div>
+                <h3 class="text-white mt-1 mb-0 font-bold">{{ total_courses }}</h3>
+            </div>
+            <!-- Card 3 -->
+            <div class="card-glass p-4 text-center">
+                <i class="fa-solid fa-laptop-code text-info fs-3 mb-2"></i>
+                <div class="text-muted-custom small uppercase tracking-wider">Formations</div>
+                <h3 class="text-white mt-1 mb-0 font-bold">{{ total_trainings }}</h3>
+            </div>
+            <!-- Card 4 -->
+            <div class="card-glass p-4 text-center">
+                <i class="fa-solid fa-newspaper text-warning fs-3 mb-2"></i>
+                <div class="text-muted-custom small uppercase tracking-wider">Publications</div>
+                <h3 class="text-white mt-1 mb-0 font-bold">{{ total_publications }}</h3>
+            </div>
+            <!-- Card 5 -->
+            <div class="card-glass p-4 text-center">
+                <i class="fa-solid fa-download text-danger fs-3 mb-2"></i>
+                <div class="text-muted-custom small uppercase tracking-wider">Téléchargements</div>
+                <h3 class="text-white mt-1 mb-0 font-bold">{{ total_downloads }}</h3>
+            </div>
+            <!-- Card 6 -->
+            <div class="card-glass p-4 text-center">
+                <i class="fa-solid fa-award text-warning fs-3 mb-2"></i>
+                <div class="text-muted-custom small uppercase tracking-wider">Certificats</div>
+                <h3 class="text-white mt-1 mb-0 font-bold">{{ total_certificates }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="col-lg-8 mb-4">
+        <div class="card-glass p-4">
+            <h4 class="text-white mb-4"><i class="fa-solid fa-chart-line text-primary me-2"></i> Statistiques d'audience & Téléchargements</h4>
+            <div class="row">
+                <div class="col-md-6 mb-3 text-center">
+                    <h5 class="text-muted-custom text-center mb-2">Vues par Section</h5>
+                    {% if visits_chart_base64 %}
+                        <img src="{{ visits_chart_base64 }}" class="w-100 h-auto rounded" style="max-height: 250px; object-fit: contain;" alt="Vues par Section">
+                    {% else %}
+                        <div class="text-muted-custom py-5">Pas assez de données pour le graphique.</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3 text-center">
+                    <h5 class="text-muted-custom text-center mb-2">Top 5 Téléchargements</h5>
+                    {% if downloads_chart_base64 %}
+                        <img src="{{ downloads_chart_base64 }}" class="w-100 h-auto rounded" style="max-height: 250px; object-fit: contain;" alt="Top 5 Téléchargements">
+                    {% else %}
+                        <div class="text-muted-custom py-5">Pas assez de données pour le graphique.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-lg-4 mb-4">
+        <div class="card-glass p-4 h-100">
+            <h4 class="text-white mb-3"><i class="fa-solid fa-rocket text-primary me-2"></i> Raccourcis</h4>
+            <div class="grid grid-cols-2 gap-3">
+                <a href="{% url 'create_news' %}" class="btn btn-primary-custom text-center py-3 px-2 flex flex-col items-center justify-center gap-1 no-underline">
+                    <i class="fa-solid fa-bullhorn text-lg"></i>
+                    <span class="text-xs font-semibold">Publier Actu</span>
+                </a>
+                <a href="{% url 'create_course' %}" class="btn btn-secondary-custom text-center py-3 px-2 flex flex-col items-center justify-center gap-1 no-underline">
+                    <i class="fa-solid fa-book-medical text-lg"></i>
+                    <span class="text-xs font-semibold">Ajouter Cours</span>
+                </a>
+                <a href="{% url 'create_training' %}" class="btn btn-secondary-custom text-center py-3 px-2 flex flex-col items-center justify-center gap-1 no-underline">
+                    <i class="fa-solid fa-graduation-cap text-lg"></i>
+                    <span class="text-xs font-semibold">Ajouter Formation</span>
+                </a>
+                <a href="{% url 'manage_appointments' %}" class="btn btn-secondary-custom text-center py-3 px-2 flex flex-col items-center justify-center gap-1 no-underline">
+                    <i class="fa-solid fa-calendar-plus text-lg"></i>
+                    <span class="text-xs font-semibold">Créer Créneau</span>
+                </a>
+            </div>
+            <hr class="border-secondary my-4">
+            <h5 class="text-white mb-3">Rapports d'activité</h5>
+            <div class="d-grid gap-2">
+                <a href="{% url 'export_pdf_report' %}" class="btn btn-secondary-custom btn-sm"><i class="fa-solid fa-file-pdf me-2 text-danger"></i> Télécharger Rapport PDF</a>
+                <a href="{% url 'export_csv_report' 'students' %}" class="btn btn-secondary-custom btn-sm"><i class="fa-solid fa-file-csv me-2 text-success"></i> Exporter Étudiants (CSV)</a>
+                <a href="{% url 'export_csv_report' 'downloads' %}" class="btn btn-secondary-custom btn-sm"><i class="fa-solid fa-file-csv me-2 text-success"></i> Exporter Téléchargements (CSV)</a>
+                <a href="{% url 'export_csv_report' 'visits' %}" class="btn btn-secondary-custom btn-sm"><i class="fa-solid fa-file-csv me-2 text-success"></i> Exporter Visites (CSV)</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointments & Activities -->
+    <div class="col-lg-6 mb-4">
+        <div class="card-glass p-4 h-100">
+            <h4 class="text-white mb-3"><i class="fa-solid fa-calendar-check text-primary me-2"></i> Rendez-vous à venir (En attente)</h4>
+            {% if upcoming_appointments %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="text-muted-custom">
+                                <th>Étudiant</th>
+                                <th>Date / Heure</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for slot in upcoming_appointments %}
+                                <tr>
+                                    <td>
+                                        <div class="font-bold text-white">{{ slot.student_name }}</div>
+                                        <div class="text-muted-custom small">{{ slot.student_email }}</div>
+                                    </td>
+                                    <td class="text-white small">
+                                        {{ slot.start_time|date:"d/m/Y H:i" }}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'manage_appointments' %}" class="btn btn-secondary-custom btn-sm">Gérer</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4 text-muted-custom">
+                    <i class="fa-solid fa-calendar-xmark fs-2 mb-2"></i>
+                    <p class="mb-0">Aucun rendez-vous en attente de confirmation.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card-glass p-4 h-100">
+            <h4 class="text-white mb-3"><i class="fa-solid fa-bolt text-primary me-2"></i> Activités Récentes</h4>
+            {% if activities %}
+                <div class="space-y-3" style="max-height: 320px; overflow-y: auto;">
+                    {% for act in activities %}
+                        <div class="flex items-start gap-3 p-2 rounded hover:bg-white/[0.02] transition-colors">
+                            <div class="w-8 h-8 rounded-full bg-white/[0.05] flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fa-solid {{ act.icon }}"></i>
+                            </div>
+                            <div class="flex-grow min-width-0">
+                                <p class="text-white text-sm mb-0">{{ act.text }}</p>
+                                <span class="text-muted-custom text-xs">{{ act.time|date:"d M H:i" }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted-custom text-center py-4">Aucune activité enregistrée.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block prof_js %}
+{% endblock %}

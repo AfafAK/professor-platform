@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}{{ training.title }} - ProfPlatform{% endblock %}
+
+{% block content %}
+<div class="row animated-fade">
+    <div class="col-lg-8">
+        <div class="card-glass p-4 mb-4">
+            <span class="badge-custom">FORMATION</span>
+            <h1 class="mt-2">{{ training.title }}</h1>
+            <p class="text-muted-custom small mb-4"><i class="fa-regular fa-calendar-days me-1"></i> Créé le {{ training.created_at|date:"d F Y" }}</p>
+
+            <p class="lead" style="font-size: 1.1rem; white-space: pre-line;">{{ training.description }}</p>
+        </div>
+
+        <!-- Certificate Issued Box -->
+        {% if has_certificate %}
+            <div class="card-glass border-success p-4 mb-4" style="background: rgba(16, 185, 129, 0.05);">
+                <div class="d-flex align-items-center">
+                    <div class="me-4 text-success fs-1">
+                        <i class="fa-solid fa-trophy-award fa-bounce" style="font-size: 3rem; color: #10b981;"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-success h4 mb-2">Félicitations !</h3>
+                        <p class="text-muted-custom mb-3">Vous avez validé l'intégralité des modules et des quiz de cette formation. Votre certificat officiel est disponible.</p>
+                        {% if certificate %}
+                            <a href="/elearning/certificate/{{ certificate.id }}/download/" class="btn btn-success py-2 px-4 font-weight-bold">
+                                <i class="fa-solid fa-file-pdf me-2"></i> Télécharger mon Certificat (PDF)
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Modules Timeline -->
+        <h3 class="my-4"><i class="fa-solid fa-list-check text-primary me-2"></i> Programme d'apprentissage</h3>
+        <div class="card-glass p-4">
+            {% if modules %}
+                <div class="position-relative">
+                    {% for m in modules %}
+                        <div class="timeline-module {% if m.completed %}completed{% endif %}">
+                            <div class="d-flex flex-wrap align-items-start justify-content-between">
+                                <div class="flex-grow-1 me-3">
+                                    <span class="badge-custom badge-tag small py-0 px-2 font-weight-bold" style="font-size: 0.7rem;">MODULE {{ m.obj.order }}</span>
+                                    <h4 class="h5 mt-1">
+                                        {{ m.obj.title }}
+                                        {% if m.completed %}
+                                            <i class="fa-solid fa-circle-check text-success ms-2" title="Complété"></i>
+                                        {% endif %}
+                                    </h4>
+                                    <p class="text-muted-custom small mb-0">{{ m.obj.description|truncatewords:20 }}</p>
+                                </div>
+                                <div class="mt-2 mt-md-0 d-flex gap-2">
+                                    {% if user.is_authenticated %}
+                                        <a href="/elearning/module/{{ m.obj.id }}/" class="btn btn-secondary-custom btn-sm">
+                                            <i class="fa-solid fa-book-open me-1"></i> Accéder au module
+                                        </a>
+
+                                        {% if m.has_quiz %}
+                                            {% if m.completed %}
+                                                <span class="btn btn-success btn-sm disabled"><i class="fa-solid fa-check-double"></i> Quiz Réussi</span>
+                                            {% else %}
+                                                <a href="/elearning/quiz/{{ m.obj.quiz.id }}/" class="btn btn-primary-custom btn-sm">
+                                                    <i class="fa-solid fa-circle-question me-1"></i> Passer le Quiz
+                                                </a>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted small"><i class="fa-solid fa-lock me-1"></i> Connectez-vous pour y accéder</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted-custom mb-0">Aucun module n'est encore associé à cette formation.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sidebar details -->
+    <div class="col-lg-4">
+        {% if user.is_authenticated %}
+            <div class="card-glass p-4 text-center mb-4">
+                <h4 class="h5 mb-3 text-muted-custom">Votre progression</h4>
+                <div class="fs-1 font-weight-bold text-white mb-2">{{ progress_percent }}%</div>
+                <div class="progress-container mb-3">
+                    <div class="progress-bar-custom" style="width: {{ progress_percent }}%;"></div>
+                </div>
+                <p class="text-muted-custom small">Terminez tous les modules et réussissez les quiz pour obtenir votre certificat.</p>
+            </div>
+        {% else %}
+            <div class="card-glass p-4 text-center">
+                <i class="fa-solid fa-circle-user text-muted-custom fs-1 mb-3"></i>
+                <h4 class="h5 mb-2">Suivre cette formation</h4>
+                <p class="text-muted-custom">Inscrivez-vous ou connectez-vous pour commencer à apprendre et suivre vos progrès.</p>
+                <div class="d-grid gap-2">
+                    <a href="/login/" class="btn btn-primary-custom">Se connecter</a>
+                    <a href="/register/" class="btn btn-secondary-custom">Créer un compte</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,220 @@
+{% extends "analytics/prof/dashboard_layout.html" %}
+
+{% block subtitle %}Gestion des Rendez-vous{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active text-white" aria-current="page">Rendez-vous</li>
+{% endblock %}
+
+{% block prof_content %}
+<div class="row animated-fade">
+    <div class="col-12 mb-4 flex justify-between items-center flex-wrap gap-3">
+        <div>
+            <h2 class="text-white mt-0 mb-1">Calendrier des Rendez-vous</h2>
+            <p class="text-muted-custom mb-0 text-sm">Gérez les créneaux disponibles pour vos étudiants et traitez les demandes de rendez-vous en attente.</p>
+        </div>
+        <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#createSlotModal"><i class="fa-solid fa-plus me-2"></i> Créer un Créneau</button>
+    </div>
+
+    <!-- Calendar Card -->
+    <div class="col-lg-8 mb-4">
+        <div class="card-glass p-4">
+            <div id="calendar" style="min-height: 550px;"></div>
+        </div>
+    </div>
+
+    <!-- Right Side Actions & Pending list -->
+    <div class="col-lg-4 mb-4">
+        <div class="card-glass p-4 h-100 flex flex-col justify-between">
+            <div>
+                <h4 class="text-white mb-3"><i class="fa-solid fa-clock text-primary me-2"></i> Légende du Calendrier</h4>
+                <div class="space-y-2 text-sm text-muted-custom mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3.5 h-3.5 rounded-full inline-block" style="background-color: #10b981;"></span>
+                        <span>Créneau Libre (Disponible pour réservation)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3.5 h-3.5 rounded-full inline-block" style="background-color: #f59e0b;"></span>
+                        <span>En attente de confirmation du prof</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3.5 h-3.5 rounded-full inline-block" style="background-color: #3b82f6;"></span>
+                        <span>Rendez-vous Accepté & Confirmé</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3.5 h-3.5 rounded-full inline-block" style="background-color: #ef4444;"></span>
+                        <span>Rendez-vous Refusé / Annulé</span>
+                    </div>
+                </div>
+
+                <hr class="border-secondary my-4">
+
+                <h4 class="text-white mb-3"><i class="fa-solid fa-envelope-open-text text-primary me-2"></i> Traitement Rapide</h4>
+                <p class="text-muted-custom small">Cliquez sur n'importe quel créneau réservé (jaune, bleu ou rouge) sur le calendrier pour ouvrir le panneau d'action de confirmation, report ou refus.</p>
+            </div>
+
+            <div class="alert alert-secondary border-secondary text-muted-custom text-xs mb-0 bg-white/[0.01]">
+                <i class="fa-solid fa-circle-info me-1"></i> Des e-mails automatiques de confirmation de modification ou d'annulation sont envoyés aux étudiants lors de la validation.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Create Slot -->
+<div class="modal fade" id="createSlotModal" tabindex="-1" aria-labelledby="createSlotModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-glass p-0">
+            <div class="modal-header border-secondary px-4 py-3">
+                <h5 class="modal-title text-white" id="createSlotModalLabel">Créer un nouveau créneau disponible</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body px-4 py-4 space-y-4">
+                    <div>
+                        <label class="form-label text-white font-semibold">Heure de début</label>
+                        <input type="datetime-local" name="start_time" required class="form-control form-control-custom">
+                    </div>
+                    <div>
+                        <label class="form-label text-white font-semibold">Heure de fin</label>
+                        <input type="datetime-local" name="end_time" required class="form-control form-control-custom">
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary px-4 py-3">
+                    <button type="button" class="btn btn-secondary-custom" data-bs-dismiss="modal">Fermer</button>
+                    <button type="submit" class="btn btn-primary-custom">Ajouter au calendrier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Manage Slot Actions -->
+<div class="modal fade" id="manageSlotModal" tabindex="-1" aria-labelledby="manageSlotModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-glass p-0">
+            <div class="modal-header border-secondary px-4 py-3">
+                <h5 class="modal-title text-white" id="manageSlotModalLabel">Détails de la réservation</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-4 space-y-4">
+                <div class="p-3 rounded bg-white/[0.02] border border-white/[0.04]">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-muted-custom small">Statut :</span>
+                        <span id="slot-status-badge" class="badge"></span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="text-muted-custom small block">Nom étudiant :</span>
+                        <span id="slot-student-name" class="text-white font-bold"></span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="text-muted-custom small block">Adresse e-mail :</span>
+                        <span id="slot-student-email" class="text-white"></span>
+                    </div>
+                    <div>
+                        <span class="text-muted-custom small block">Objectif / Notes :</span>
+                        <p id="slot-notes" class="text-white text-sm mb-0 italic" style="white-space: pre-line;"></p>
+                    </div>
+                </div>
+
+                <!-- Reschedule Form (Collapse toggleable) -->
+                <div class="collapse" id="rescheduleCollapse">
+                    <form id="rescheduleForm" method="post">
+                        {% csrf_token %}
+                        <div class="p-3 rounded bg-warning bg-opacity-5 border border-warning border-opacity-10 space-y-3">
+                            <h6 class="text-warning mb-2 font-bold"><i class="fa-solid fa-calendar-days me-1"></i> Proposer une nouvelle date</h6>
+                            <div>
+                                <label class="form-label text-white small">Début</label>
+                                <input type="datetime-local" name="start_time" required class="form-control form-control-custom">
+                            </div>
+                            <div>
+                                <label class="form-label text-white small">Fin</label>
+                                <input type="datetime-local" name="end_time" required class="form-control form-control-custom">
+                            </div>
+                            <div class="flex justify-end gap-1.5 mt-2">
+                                <button type="button" class="btn btn-xs btn-secondary-custom" data-bs-toggle="collapse" data-bs-target="#rescheduleCollapse">Annuler</button>
+                                <button type="submit" class="btn btn-xs btn-warning text-dark font-bold px-3">Reporter</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="modal-footer border-secondary px-4 py-3 justify-between flex-wrap gap-2">
+                <div>
+                    <!-- Accept / Reject Actions -->
+                    <a id="btn-accept-slot" href="#" class="btn btn-success font-semibold btn-sm"><i class="fa-solid fa-check me-1"></i> Confirmer</a>
+                    <a id="btn-reject-slot" href="#" class="btn btn-danger font-semibold btn-sm"><i class="fa-solid fa-xmark me-1"></i> Refuser</a>
+                </div>
+                <button type="button" class="btn btn-warning text-dark font-bold btn-sm" data-bs-toggle="collapse" data-bs-target="#rescheduleCollapse"><i class="fa-solid fa-clock-rotate-left me-1"></i> Reporter</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block prof_js %}
+<!-- FullCalendar.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const calendarEl = document.getElementById("calendar");
+        const manageModal = new bootstrap.Modal(document.getElementById('manageSlotModal'));
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'timeGridWeek',
+            locale: 'fr',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            firstDay: 1,
+            slotMinTime: "08:00:00",
+            slotMaxTime: "20:00:00",
+            allDaySlot: false,
+            events: "/contact/api/slots/",
+            eventClick: function(info) {
+                const props = info.event.extendedProps;
+
+                if (props.isBooked) {
+                    // Update details
+                    document.getElementById("slot-student-name").innerText = props.studentName;
+                    document.getElementById("slot-student-email").innerText = props.studentEmail;
+                    document.getElementById("slot-notes").innerText = props.notes || "Aucune note fournie.";
+
+                    const badge = document.getElementById("slot-status-badge");
+                    badge.innerText = props.status === 'ACCEPTED' ? 'Accepté' : (props.status === 'REJECTED' ? 'Refusé' : 'En attente');
+                    badge.className = `badge bg-${props.status === 'ACCEPTED' ? 'success' : (props.status === 'REJECTED' ? 'danger' : 'warning')}`;
+
+                    // Set URLs
+                    document.getElementById("btn-accept-slot").href = `/dashboard/appointments/${info.event.id}/accept/`;
+                    document.getElementById("btn-reject-slot").href = `/dashboard/appointments/${info.event.id}/reject/`;
+                    document.getElementById("rescheduleForm").action = `/dashboard/appointments/${info.event.id}/reschedule/`;
+
+                    // Toggle actions buttons visibility based on status
+                    if(props.status !== 'PENDING') {
+                        document.getElementById("btn-accept-slot").classList.add("hidden");
+                        document.getElementById("btn-reject-slot").classList.add("hidden");
+                    } else {
+                        document.getElementById("btn-accept-slot").classList.remove("hidden");
+                        document.getElementById("btn-reject-slot").classList.remove("hidden");
+                    }
+
+                    // Hide reschedule if active
+                    const collapse = document.getElementById("rescheduleCollapse");
+                    if (collapse.classList.contains("show")) {
+                        bootstrap.Collapse.getInstance(collapse).hide();
+                    }
+
+                    manageModal.show();
+                } else {
+                    alert("Ce créneau est libre. Aucun étudiant ne l'a encore réservé.");
+                }
+            }
+        });
+
+        calendar.render();
+    });
+</script>
+{% endblock %}

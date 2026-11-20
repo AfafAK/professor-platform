@@ -1,0 +1,196 @@
+{% extends "analytics/prof/dashboard_layout.html" %}
+
+{% block subtitle %}Messages Reçus{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active text-white" aria-current="page">Messages Reçus</li>
+{% endblock %}
+
+{% block prof_content %}
+<div class="row animated-fade">
+    <div class="col-12 mb-4 flex justify-between items-center flex-wrap gap-3">
+        <div>
+            <h2 class="text-white mt-0 mb-1">Messages de contact reçus</h2>
+            <p class="text-muted-custom mb-0 text-sm">Consultez et gérez les messages envoyés par les étudiants ou les visiteurs via le formulaire de contact.</p>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <div class="col-12 mb-4">
+        <div class="card-glass p-3">
+            <form method="get" class="flex gap-2 items-center flex-wrap w-full">
+                <div class="input-group flex-grow max-w-sm">
+                    <span class="input-group-text bg-transparent border-end-0 border-secondary"><i class="fa-solid fa-magnifying-glass text-secondary"></i></span>
+                    <input type="text" name="search" class="form-control form-control-custom border-start-0" placeholder="Rechercher par nom, e-mail, sujet..." value="{{ search }}">
+                </div>
+                <button type="submit" class="btn btn-secondary-custom">Filtrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Messages list -->
+    <div class="col-12 mb-4">
+        <div class="card-glass p-0 overflow-hidden">
+            {% if page_obj.object_list %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="text-muted-custom">
+                                <th>Expéditeur</th>
+                                <th>Sujet</th>
+                                <th>Date d'envoi</th>
+                                <th class="text-end px-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for msg in page_obj.object_list %}
+                                <tr>
+                                    <td>
+                                        <div class="font-bold text-white">{{ msg.name }}</div>
+                                        <span class="text-muted-custom small">{{ msg.email }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="text-white font-semibold">{{ msg.subject }}</div>
+                                        <span class="text-muted-custom small text-xs block truncate" style="max-width: 300px;">{{ msg.message }}</span>
+                                    </td>
+                                    <td class="text-white small">
+                                        {{ msg.created_at|date:"d/m/Y H:i" }}
+                                    </td>
+                                    <td class="text-end px-4">
+                                        <div class="flex justify-end gap-1.5">
+                                            <!-- Open message modal button -->
+                                            <button class="btn btn-sm btn-primary-custom" data-bs-toggle="modal" data-bs-target="#viewMessageModal{{ msg.id }}" title="Lire le message">
+                                                <i class="fa-solid fa-envelope-open me-1"></i> Lire
+                                            </button>
+
+                                            <!-- Delete button -->
+                                            <form action="{% url 'delete_contact_message' msg.id %}" method="post" class="d-inline" onsubmit="return confirm('Voulez-vous vraiment supprimer ce message ?');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-secondary-custom" title="Supprimer">
+                                                    <i class="fa-solid fa-trash text-danger"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                    <div class="d-flex justify-content-center p-3 border-top border-secondary">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination pagination-sm mb-0">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item"><a class="page-link bg-transparent border-secondary text-secondary" href="?search={{ search }}&page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+                                {% endif %}
+                                {% for num in page_obj.paginator.page_range %}
+                                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                        <a class="page-link {% if page_obj.number == num %}btn-primary-custom border-primary-custom{% else %}bg-transparent border-secondary text-secondary{% endif %}" href="?search={{ search }}&page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endfor %}
+                                {% if page_obj.has_next %}
+                                    <li class="page-item"><a class="page-link bg-transparent border-secondary text-secondary" href="?search={{ search }}&page={{ page_obj.next_page_number }}">&raquo;</a></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5 text-muted-custom">
+                    <i class="fa-solid fa-envelope-open-text fs-1 mb-2"></i>
+                    <p class="mb-0">Aucun message de contact reçu.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- MODALS: Rendered at root level outside animated-fade wrapper to prevent backdrop stacking bugs -->
+{% if page_obj.object_list %}
+    {% for msg in page_obj.object_list %}
+        <div class="modal fade" id="viewMessageModal{{ msg.id }}" tabindex="-1" aria-labelledby="viewMessageModalLabel{{ msg.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content card-glass p-0">
+                    <div class="modal-header border-secondary px-4 py-3">
+                        <h5 class="modal-title text-white" id="viewMessageModalLabel{{ msg.id }}"><i class="fa-solid fa-envelope text-primary me-2"></i> Message de : {{ msg.name }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body px-4 py-4 space-y-4">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <span class="text-muted-custom small block">Nom de l'étudiant / visiteur :</span>
+                                <strong class="text-white text-base">{{ msg.name }}</strong>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <span class="text-muted-custom small block">Adresse e-mail :</span>
+                                <a href="mailto:{{ msg.email }}" class="text-info font-bold">{{ msg.email }}</a>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <span class="text-muted-custom small block">Sujet du message :</span>
+                                <strong class="text-white text-base">{{ msg.subject }}</strong>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <span class="text-muted-custom small block">Date et heure de réception :</span>
+                                <span class="text-white">{{ msg.created_at|date:"d F Y à H:i:s" }}</span>
+                            </div>
+                            <div class="col-12">
+                                <span class="text-muted-custom small block mb-2">Contenu du message :</span>
+                                <div class="p-3 rounded bg-white/[0.02] border border-white/[0.05] text-white" style="white-space: pre-wrap; font-family: inherit;">{{ msg.message }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-secondary px-4 py-3">
+                        <a href="mailto:{{ msg.email }}?subject=Re:{{ msg.subject|urlencode }}" onclick="replyToEmail('{{ msg.email }}', event)" class="btn btn-primary-custom"><i class="fa-solid fa-reply me-1"></i> Répondre par e-mail</a>
+                        <button type="button" class="btn btn-secondary-custom" data-bs-dismiss="modal">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+{% endblock %}
+
+{% block prof_js %}
+<script>
+    // Copy email to clipboard and alert as helper
+    function replyToEmail(email, event) {
+        // Copy to clipboard
+        navigator.clipboard.writeText(email).then(() => {
+            alert("L'adresse e-mail (" + email + ") a été copiée dans votre presse-papiers !\n\nSi votre application de messagerie locale ne s'ouvre pas automatiquement, vous pouvez simplement coller (Ctrl+V) cette adresse dans Gmail/Outlook pour répondre.");
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // Find all modal close elements
+        const closeButtons = document.querySelectorAll('[data-bs-dismiss="modal"]');
+        closeButtons.forEach(button => {
+            button.addEventListener("click", function() {
+                // Find parent modal
+                const modal = button.closest('.modal');
+                if (modal) {
+                    // Try using Bootstrap Modal instance
+                    const modalInstance = bootstrap.Modal.getInstance(modal);
+                    if (modalInstance) {
+                        modalInstance.hide();
+                    } else {
+                        // Manual fallback to clean up backdrop and styles
+                        modal.classList.remove('show');
+                        modal.style.display = 'none';
+                        document.body.classList.remove('modal-open');
+                        document.body.style.overflow = '';
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) {
+                            backdrop.remove();
+                        }
+                    }
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

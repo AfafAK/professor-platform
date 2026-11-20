@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Professeur - Statistiques & Administration{% endblock %}
+
+{% block content %}
+<div class="row animated-fade">
+    <div class="col-12 mb-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <span class="badge-custom bg-warning bg-opacity-10 text-warning border-warning">ADMINISTRATION</span>
+                <h1 class="mt-2 text-gradient">Espace Suivi & Statistiques Professeur</h1>
+                <p class="text-muted-custom">Analysez la fréquentation, l'impact des ressources partagées et le progrès des étudiants inscrits.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'export_pdf_report' %}" class="btn btn-primary-custom"><i class="fa-solid fa-file-pdf me-2"></i>Rapport PDF</a>
+                <div class="dropdown">
+                    <button class="btn btn-secondary-custom dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-file-csv me-2"></i>Exporter en CSV
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end bg-dark border-secondary" aria-labelledby="dropdownMenuButton">
+                        <li><a class="dropdown-item text-white" href="{% url 'export_csv_report' 'students' %}"><i class="fa-solid fa-users me-2 text-info"></i>Données Étudiants</a></li>
+                        <li><a class="dropdown-item text-white" href="{% url 'export_csv_report' 'downloads' %}"><i class="fa-solid fa-download me-2 text-success"></i>Téléchargements</a></li>
+                        <li><a class="dropdown-item text-white" href="{% url 'export_csv_report' 'visits' %}"><i class="fa-solid fa-chart-line me-2 text-warning"></i>Visites du Site</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card-glass p-3 text-center">
+                <i class="fa-solid fa-users text-primary fs-3 mb-2"></i>
+                <div class="text-muted-custom small">Étudiants Inscrits</div>
+                <div class="fs-2 font-weight-bold text-white">{{ total_students }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card-glass p-3 text-center">
+                <i class="fa-solid fa-cloud-arrow-down text-info fs-3 mb-2"></i>
+                <div class="text-muted-custom small">Téléchargements</div>
+                <div class="fs-2 font-weight-bold text-white">{{ total_downloads }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card-glass p-3 text-center">
+                <i class="fa-solid fa-chart-simple text-success fs-3 mb-2"></i>
+                <div class="text-muted-custom small">Pages Vues</div>
+                <div class="fs-2 font-weight-bold text-white">{{ total_visits }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card-glass p-3 text-center">
+                <i class="fa-solid fa-calendar-check text-warning fs-3 mb-2"></i>
+                <div class="text-muted-custom small">Rendez-vous Réservés</div>
+                <div class="fs-2 font-weight-bold text-white">{{ total_appointments }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Matplotlib Visual Analytics -->
+    <div class="row mb-5">
+        <div class="col-md-6 mb-4">
+            <div class="card-glass p-4 h-100 text-center">
+                {% if chart_visits %}
+                    <img src="data:image/png;base64,{{ chart_visits }}" alt="Visits Chart" class="img-fluid">
+                {% else %}
+                    <p class="text-muted-custom my-5">Pas assez de données de visite pour générer le graphique.</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card-glass p-4 h-100 text-center">
+                {% if chart_downloads %}
+                    <img src="data:image/png;base64,{{ chart_downloads }}" alt="Downloads Chart" class="img-fluid">
+                {% else %}
+                    <p class="text-muted-custom my-5">Pas assez de données de téléchargement pour générer le graphique.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Block -->
+    <div class="col-12 mb-4">
+        <div class="card-glass p-4">
+            <h4 class="mb-3 text-white"><i class="fa-solid fa-filter text-primary me-2"></i> Filtres de recherche</h4>
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="search" class="form-label text-muted-custom small">Rechercher un étudiant</label>
+                    <input type="text" class="form-control form-control-custom" id="search" name="search" placeholder="Nom, e-mail, identifiant..." value="{{ search_query }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="training" class="form-label text-muted-custom small">Par formation</label>
+                    <select class="form-select form-control-custom" id="training" name="training">
+                        <option value="">Toutes les formations</option>
+                        {% for t in all_trainings %}
+                            <option value="{{ t.id }}" {% if training_filter == t.id|stringformat:"s" %}selected{% endif %}>{{ t.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label text-muted-custom small">Statut de compte</label>
+                    <select class="form-select form-control-custom" id="status" name="status">
+                        <option value="">Tous les statuts</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Actif</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactif</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary-custom w-100"><i class="fa-solid fa-magnifying-glass me-2"></i>Filtrer</button>
+                        <a href="{% url 'professor_dashboard' %}" class="btn btn-secondary-custom" title="Réinitialiser les filtres"><i class="fa-solid fa-arrow-rotate-right"></i></a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Student Tracking Management -->
+    <div class="col-12 mb-5">
+        <h3 class="mb-3 text-white"><i class="fa-solid fa-users-gear text-primary me-2"></i> Suivi Individuel des Étudiants</h3>
+        <div class="card-glass p-4">
+            {% if students %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="text-muted-custom">
+                                <th>Étudiant</th>
+                                <th>Adresse E-mail</th>
+                                <th>Formations & Progrès</th>
+                                <th class="text-center">Quiz Passés</th>
+                                <th class="text-center">Certificats</th>
+                                <th class="text-center">Statut</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for std in students %}
+                                <tr>
+                                    <td>
+                                        <b class="text-white">{{ std.user.first_name }} {{ std.user.last_name }}</b>
+                                        <div class="small text-muted-custom">@{{ std.user.username }}</div>
+                                    </td>
+                                    <td>{{ std.user.email }}</td>
+                                    <td>
+                                        {% if std.progresses %}
+                                            {% for prog in std.progresses %}
+                                                <div class="mb-2">
+                                                    <span class="small d-block text-white mb-1">{{ prog.training_title }}</span>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="progress-container flex-grow-1 me-2" style="height: 6px;">
+                                                            <div class="progress-bar-custom" style="width: {{ prog.progress_percent }}%;"></div>
+                                                        </div>
+                                                        <span class="small text-secondary">{{ prog.progress_percent }}%</span>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <span class="text-muted small">Aucun progrès enregistré</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center font-weight-bold text-info">{{ std.submission_count }}</td>
+                                    <td class="text-center">
+                                        {% if std.certificate_count > 0 %}
+                                            <span class="badge bg-success"><i class="fa-solid fa-medal"></i> {{ std.certificate_count }} émis</span>
+                                        {% else %}
+                                            <span class="text-muted small">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if std.user.is_active %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Actif</span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Inactif</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <!-- Toggle active status -->
+                                            <a href="{% url 'toggle_student_status' std.user.id %}"
+                                               class="btn btn-sm {% if std.user.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}"
+                                               title="{% if std.user.is_active %}Désactiver le compte{% else %}Activer le compte{% endif %}">
+                                                {% if std.user.is_active %}
+                                                    <i class="fa-solid fa-user-slash"></i>
+                                                {% else %}
+                                                    <i class="fa-solid fa-user-check"></i>
+                                                {% endif %}
+                                            </a>
+                                            <!-- Reset progress -->
+                                            <a href="{% url 'reset_student_progress' std.user.id %}"
+                                               class="btn btn-sm btn-outline-danger"
+                                               title="Réinitialiser la progression"
+                                               onclick="return confirm('Êtes-vous sûr de vouloir réinitialiser toute la progression de cet étudiant ? Cela supprimera également tous ses certificats et tentatives de quiz.');">
+                                                <i class="fa-solid fa-trash-can-arrow-up"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted-custom mb-0">Aucun étudiant ne correspond à votre recherche ou aucun inscrit.</p>
+            {% endif %}
+        </div>
+    </div>
+
+
+    <!-- Row of lists (Messages and Booked appointments) -->
+    <div class="row">
+        <!-- Messages -->
+        <div class="col-lg-6 mb-4">
+            <h3 class="mb-3 text-white"><i class="fa-solid fa-comments text-primary me-2"></i> Messages de Contact Récents</h3>
+            <div class="card-glass p-4 h-100">
+                {% if recent_messages %}
+                    {% for msg in recent_messages %}
+                        <div class="border-bottom border-secondary pb-3 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <b class="text-white">{{ msg.name }}</b>
+                                <span class="small text-secondary">{{ msg.created_at|date:"d/m/Y H:i" }}</span>
+                            </div>
+                            <div class="small text-info mb-2">{{ msg.email }} | Sujet: {{ msg.subject }}</div>
+                            <p class="text-muted-custom small mb-0">{{ msg.message }}</p>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted-custom mb-0">Aucun message de contact.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Booked Appointments -->
+        <div class="col-lg-6 mb-4">
+            <h3 class="mb-3 text-white"><i class="fa-solid fa-calendar-check text-primary me-2"></i> Rendez-vous à venir</h3>
+            <div class="card-glass p-4 h-100">
+                {% if booked_appointments %}
+                    {% for rdv in booked_appointments %}
+                        <div class="border-bottom border-secondary pb-3 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <b class="text-white"><i class="fa-regular fa-clock me-1 text-warning"></i> {{ rdv.start_time|date:"d/m/Y H:i" }} - {{ rdv.end_time|date:"H:i" }}</b>
+                                <span class="badge bg-secondary">Réservé</span>
+                            </div>
+                            <div class="small text-info mt-1">Élève: {{ rdv.student_name }} ({{ rdv.student_email }})</div>
+                            {% if rdv.student_notes %}
+                                <p class="text-muted-custom small mt-2 mb-0"><b>Notes :</b> {{ rdv.student_notes }}</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted-custom mb-0">Aucun rendez-vous réservé dans l'immédiat.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

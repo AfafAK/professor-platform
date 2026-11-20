@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Plateforme Académique du Professeur{% endblock %}</title>
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <!-- Custom Style -->
+    <link href="/static/css/style.css?v=1.4" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+    <!-- Theme Script to avoid flash -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem("theme") || "dark";
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="/"><span>Prof.</span> Academix</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/"><i class="fa-solid fa-house me-1"></i> Accueil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/courses/' in request.path %}active{% endif %}" href="/courses/"><i class="fa-solid fa-graduation-cap me-1"></i> Supports</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/elearning/' in request.path %}active{% endif %}" href="/elearning/"><i class="fa-solid fa-laptop-code me-1"></i> E-learning</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/research/' in request.path %}active{% endif %}" href="/research/"><i class="fa-solid fa-flask-vial me-1"></i> Recherche</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/contact/' in request.path %}active{% endif %}" href="/contact/"><i class="fa-solid fa-calendar-days me-1"></i> Contact & RDV</a>
+                    </li>
+
+                    <!-- Administration Link for Professor -->
+                    {% if user.is_staff %}
+                    <li class="nav-item">
+                        <a class="nav-link text-warning {% if '/dashboard/' in request.path %}active{% endif %}" href="/dashboard/"><i class="fa-solid fa-chart-line me-1"></i> Stats Prof</a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Theme Toggle -->
+                    <li class="nav-item ms-lg-2 me-lg-2">
+                        <button class="btn btn-navbar bg-transparent border-0 text-secondary" id="theme-toggle" title="Changer de thème" style="box-shadow: none; padding: 0.5rem 0.8rem;">
+                            <i class="fa-solid fa-moon"></i>
+                        </button>
+                    </li>
+
+                    <!-- Auth Actions -->
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown ms-lg-3">
+                        <a class="nav-link dropdown-toggle btn-navbar text-white" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-circle-user me-1"></i> {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end bg-dark border-secondary mt-2" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item text-white" href="/elearning/dashboard/"><i class="fa-solid fa-chalkboard-user me-2"></i> Mon Espace Étudiant</a></li>
+                            {% if user.is_superuser %}
+                            <li><a class="dropdown-item text-white" href="/admin/" target="_blank"><i class="fa-solid fa-gears me-2"></i> Admin Django</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider border-secondary"></li>
+                            <li>
+                                <form action="/logout/" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item text-danger"><i class="fa-solid fa-right-from-bracket me-2"></i> Déconnexion</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item ms-lg-3">
+                        <a class="btn btn-navbar" href="/login/"><i class="fa-solid fa-right-to-bracket me-1"></i> Connexion</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container">
+            <!-- Global Messages Notification -->
+            {% if messages %}
+            <div class="row">
+                <div class="col-12">
+                    {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show card-glass border-secondary py-3 px-4 mb-4" role="alert">
+                        <div class="d-flex align-items-center">
+                            {% if message.tags == 'success' %}
+                                <i class="fa-solid fa-circle-check text-success fs-4 me-3"></i>
+                            {% elif message.tags == 'error' %}
+                                <i class="fa-solid fa-circle-exclamation text-danger fs-4 me-3"></i>
+                            {% else %}
+                                <i class="fa-solid fa-circle-info text-info fs-4 me-3"></i>
+                            {% endif %}
+                            <div>{{ message }}</div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="top: 1.15rem; right: 1rem;"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center text-lg-start">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 col-md-12 mb-4 mb-md-0">
+                    <h5 class="text-white mb-3">Plateforme Académique du Professeur</h5>
+                    <p class="text-muted-custom">
+                        Portail unique centralisant les ressources d'enseignement, l'apprentissage en ligne,
+                        les travaux de recherche et la gestion des interactions pédagogiques.
+                    </p>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                    <h5 class="text-white mb-3">Navigation</h5>
+                    <ul class="list-unstyled mb-0">
+                        <li><a href="/courses/" class="text-muted-custom">Supports de Cours</a></li>
+                        <li><a href="/elearning/" class="text-muted-custom">Formations en Ligne</a></li>
+                        <li><a href="/research/" class="text-muted-custom">Projets & Publications</a></li>
+                        <li><a href="/contact/" class="text-muted-custom">Prendre Rendez-vous</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                    <h5 class="text-white mb-3">Accès rapide</h5>
+                    <ul class="list-unstyled">
+                        {% if user.is_authenticated %}
+                        <li><a href="/elearning/dashboard/" class="text-muted-custom">Espace Étudiant</a></li>
+                        {% else %}
+                        <li><a href="/login/" class="text-muted-custom">Se connecter</a></li>
+                        <li><a href="/register/" class="text-muted-custom">Créer un compte étudiant</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            <hr class="border-secondary my-4">
+            <div class="text-center text-muted-custom">
+                &copy; 2026-2027 ProfPlatform - Tous droits réservés.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Theme Toggle Logic -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const toggleBtn = document.getElementById("theme-toggle");
+            if (toggleBtn) {
+                const icon = toggleBtn.querySelector("i");
+                const currentTheme = localStorage.getItem("theme") || "dark";
+                updateIcon(currentTheme);
+
+                toggleBtn.addEventListener("click", function() {
+                    const theme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+                    document.documentElement.setAttribute("data-theme", theme);
+                    localStorage.setItem("theme", theme);
+                    updateIcon(theme);
+                });
+
+                function updateIcon(theme) {
+                    if (theme === "light") {
+                        icon.className = "fa-solid fa-sun text-warning";
+                    } else {
+                        icon.className = "fa-solid fa-moon text-secondary";
+                    }
+                }
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

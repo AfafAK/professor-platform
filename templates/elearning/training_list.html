@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Catalogue E-learning - ProfPlatform{% endblock %}
+
+{% block content %}
+<div class="row animated-fade">
+    <div class="col-12 mb-4">
+        <div class="text-center">
+            <span class="badge-custom">FORMATIONS</span>
+            <h1 class="mt-2 text-gradient">E-learning & Auto-formation</h1>
+            <p class="text-muted-custom">Progressez à votre rythme grâce à des cours structurés en modules vidéos, validés par des quiz et récompensés par des certificats officiels.</p>
+        </div>
+    </div>
+
+    <!-- Trainings Grid -->
+    <div class="row">
+        {% if trainings %}
+            {% for item in trainings %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card-glass card-glass-hover h-100 d-flex flex-column p-4">
+                        {% if item.obj.image %}
+                            <img src="{{ item.obj.image.url }}" alt="{{ item.obj.title }}" class="img-fluid rounded mb-3 border border-secondary" style="max-height: 180px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-secondary rounded mb-3 d-flex align-items-center justify-content-center text-white border border-secondary" style="height: 180px;">
+                                <i class="fa-solid fa-graduation-cap fs-1"></i>
+                            </div>
+                        {% endif %}
+
+                        <h3 class="h5 mb-2">{{ item.obj.title }}</h3>
+                        <p class="text-muted-custom small flex-grow-1">{{ item.obj.description|truncatewords:25 }}</p>
+
+                        <!-- Student progress tracking -->
+                        {% if user.is_authenticated %}
+                            <div class="mb-3 mt-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="small text-muted-custom">Progression</span>
+                                    <span class="small font-weight-bold text-white">{{ item.progress }}%</span>
+                                </div>
+                                <div class="progress-container">
+                                    <div class="progress-bar-custom" style="width: {{ item.progress }}%;"></div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="mt-3">
+                            <a href="/elearning/training/{{ item.obj.id }}/" class="btn btn-primary-custom w-100">
+                                {% if user.is_authenticated and item.progress > 0 %}
+                                    <i class="fa-solid fa-play me-1"></i> Continuer la formation
+                                {% else %}
+                                    <i class="fa-solid fa-rocket me-1"></i> Commencer la formation
+                                {% endif %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center mt-5">
+                <div class="card-glass p-5">
+                    <i class="fa-solid fa-laptop-code text-muted-custom fs-1 mb-3"></i>
+                    <h3>Aucune formation disponible</h3>
+                    <p class="text-muted-custom">Le professeur n'a pas encore publié de formation en ligne.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

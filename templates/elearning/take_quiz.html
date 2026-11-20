@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz - {{ quiz.title }} - ProfPlatform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animated-fade">
+    <div class="col-lg-8">
+        <!-- Breadcrumb back -->
+        <a href="/elearning/module/{{ module.id }}/" class="text-white text-decoration-none font-weight-semibold mb-4 d-inline-block">
+            <i class="fa-solid fa-arrow-left me-2"></i> Retour au module de cours
+        </a>
+
+        <div class="card-glass p-4 mb-4">
+            <span class="badge-custom">ÉVALUATION</span>
+            <h2 class="mt-2 text-gradient">{{ quiz.title }}</h2>
+            <p class="text-muted-custom">Répondez à toutes les questions ci-dessous. Un score d'au moins <b>{{ quiz.passing_score }}%</b> est requis pour valider ce module.</p>
+        </div>
+
+        <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+
+            {% for question in questions %}
+                <div class="card-glass p-4 mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="badge bg-secondary me-3" style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">{{ forloop.counter }}</span>
+                        <h4 class="h5 mb-0 text-white">{{ question.text }}</h4>
+                    </div>
+
+                    <div class="options-container ms-lg-5">
+                        {% for choice in question.choices.all %}
+                            <div class="position-relative">
+                                <input type="radio" name="question_{{ question.id }}" id="choice_{{ choice.id }}" value="{{ choice.id }}" class="quiz-choice-input" required>
+                                <label for="choice_{{ choice.id }}" class="quiz-choice-label">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fa-regular fa-circle text-muted-custom me-3 fs-5 radio-icon"></i>
+                                        <span>{{ choice.text }}</span>
+                                    </div>
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="card-glass p-4 text-center">
+                    <p class="text-muted-custom mb-0">Ce quiz ne contient pas encore de questions.</p>
+                </div>
+            {% endfor %}
+
+            {% if questions %}
+                <div class="d-grid mt-4 mb-5">
+                    <button type="submit" class="btn btn-primary-custom py-3 font-weight-bold"><i class="fa-solid fa-paper-plane me-2"></i> Soumettre mes réponses</button>
+                </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Visual enhancement of radio button selection
+    document.addEventListener("DOMContentLoaded", function() {
+        const choiceInputs = document.querySelectorAll(".quiz-choice-input");
+        choiceInputs.forEach(input => {
+            input.addEventListener("change", function() {
+                // Find sibling choices of the same question and reset their icons
+                const questionName = this.name;
+                const siblings = document.querySelectorAll(`input[name="${questionName}"]`);
+                siblings.forEach(sib => {
+                    const label = document.querySelector(`label[for="${sib.id}"]`);
+                    const icon = label.querySelector(".radio-icon");
+                    if (sib.checked) {
+                        icon.classList.remove("fa-regular", "fa-circle");
+                        icon.classList.add("fa-solid", "fa-circle-check", "text-primary");
+                    } else {
+                        icon.classList.remove("fa-solid", "fa-circle-check", "text-primary");
+                        icon.classList.add("fa-regular", "fa-circle");
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

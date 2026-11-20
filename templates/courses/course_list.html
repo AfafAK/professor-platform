@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Supports de Cours & TD - ProfPlatform{% endblock %}
+
+{% block content %}
+<div class="row animated-fade">
+    <div class="col-12 mb-4">
+        <div class="text-center">
+            <span class="badge-custom">RESSOURCES</span>
+            <h1 class="mt-2 text-gradient">Matériel Pédagogique</h1>
+            <p class="text-muted-custom">Téléchargez vos cours, travaux dirigés (TD), travaux pratiques (TP) et ressources complémentaires.</p>
+        </div>
+    </div>
+
+    <!-- Levels Filter -->
+    <div class="col-12 mb-4 text-center">
+        <div class="d-inline-flex flex-wrap justify-content-center gap-2 card-glass p-2">
+            <a href="/courses/" class="btn {% if not selected_level %}btn-primary-custom{% else %}btn-secondary-custom{% endif %} btn-sm">Tous les niveaux</a>
+            {% for code, label in levels %}
+                <a href="/courses/?level={{ code }}" class="btn {% if selected_level == code %}btn-primary-custom{% else %}btn-secondary-custom{% endif %} btn-sm">{{ label }}</a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Subjects & Resources Grid -->
+    <div class="col-12">
+        {% if subjects %}
+            {% for subject in subjects %}
+                <div class="card-glass p-4 mb-4">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 border-bottom border-secondary pb-3">
+                        <div>
+                            <span class="badge-custom badge-level">{{ subject.get_level_display }}</span>
+                            <span class="text-secondary small ms-2">{{ subject.code }}</span>
+                            <h3 class="h4 mt-2 mb-0">{{ subject.name }}</h3>
+                        </div>
+                    </div>
+
+                    {% if subject.description %}
+                        <p class="text-muted-custom mb-4">{{ subject.description }}</p>
+                    {% endif %}
+
+                    <!-- Resources List -->
+                    <div class="row">
+                        {% if subject.resources.all %}
+                            {% for resource in subject.resources.all %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card-glass bg-opacity-10 p-3 h-100 d-flex flex-column border-secondary" style="background: rgba(255, 255, 255, 0.01);">
+                                        <div class="d-flex align-items-start mb-2">
+                                            <div class="me-3">
+                                                {% if resource.resource_type == 'COURS' %}
+                                                    <i class="fa-solid fa-file-pdf text-danger fs-3"></i>
+                                                {% elif resource.resource_type == 'TD' %}
+                                                    <i class="fa-solid fa-pen-ruler text-warning fs-3"></i>
+                                                {% elif resource.resource_type == 'TP' %}
+                                                    <i class="fa-solid fa-laptop-code text-info fs-3"></i>
+                                                {% elif resource.resource_type == 'EXAM' %}
+                                                    <i class="fa-solid fa-file-invoice text-success fs-3"></i>
+                                                {% else %}
+                                                    <i class="fa-solid fa-circle-info text-secondary fs-3"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <span class="badge-custom badge-tag btn-sm py-0 px-2 font-weight-bold" style="font-size: 0.7rem;">{{ resource.get_resource_type_display }}</span>
+                                                <h5 class="h6 mt-1 mb-1">{{ resource.title }}</h5>
+                                                {% if resource.description %}
+                                                    <p class="text-muted-custom small mb-0">{{ resource.description }}</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-auto pt-3 border-top border-secondary border-opacity-50 d-flex flex-wrap gap-2">
+                                            {% if resource.file %}
+                                                <a href="{% url 'view_resource' resource.id %}" target="_blank" class="btn btn-primary-custom btn-sm flex-grow-1 text-center">
+                                                    <i class="fa-solid fa-book-open me-1"></i> Lire en ligne
+                                                </a>
+                                                <a href="{% url 'download_resource' resource.id %}" class="btn btn-secondary-custom btn-sm flex-grow-1 text-center" title="Télécharger le fichier">
+                                                    <i class="fa-solid fa-download"></i>
+                                                </a>
+                                            {% endif %}
+
+                                            {% if resource.video_url %}
+                                                <a href="{{ resource.video_url }}" target="_blank" class="btn btn-secondary-custom btn-sm flex-grow-1 text-center">
+                                                    <i class="fa-brands fa-youtube me-1 text-danger"></i> Vidéo
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-12">
+                                <p class="text-muted-custom mb-0"><i class="fa-solid fa-info-circle me-2"></i>Aucun support de cours disponible pour cette matière actuellement.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="card-glass p-5 text-center">
+                <i class="fa-solid fa-folder-open text-muted-custom fs-1 mb-3"></i>
+                <h3>Aucune ressource trouvée</h3>
+                <p class="text-muted-custom">Aucune matière n'est configurée pour ce niveau pour le moment.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

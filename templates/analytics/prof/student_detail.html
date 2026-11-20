@@ -1,0 +1,128 @@
+{% extends "analytics/prof/dashboard_layout.html" %}
+
+{% block subtitle %}Fiche de l'Étudiant{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'manage_students' %}" class="text-secondary">Étudiants</a></li>
+<li class="breadcrumb-item active text-white" aria-current="page">{{ student.username }}</li>
+{% endblock %}
+
+{% block prof_content %}
+<div class="row animated-fade">
+    <!-- Student Header Card -->
+    <div class="col-12 mb-4">
+        <div class="card-glass p-4 flex justify-between items-center flex-wrap gap-3">
+            <div>
+                <span class="badge-custom">FICHE ÉTUDIANT</span>
+                <h2 class="text-white mt-2 mb-1">{{ student.get_full_name|default:student.username }}</h2>
+                <p class="text-muted-custom mb-0 text-sm"><i class="fa-regular fa-envelope me-1"></i> {{ student.email }} • Inscrit le {{ student.date_joined|date:"d/m/Y à H:i" }}</p>
+            </div>
+
+            <div class="flex gap-2">
+                <a href="{% url 'toggle_student_status' student.id %}" class="btn {% if student.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" onclick="return confirm('Modifier le statut ?');">
+                    <i class="fa-solid {% if student.is_active %}fa-user-slash{% else %}fa-user-check{% endif %} me-1"></i>
+                    {% if student.is_active %}Suspendre{% else %}Activer{% endif %}
+                </a>
+                <a href="{% url 'reset_student_progress' student.id %}" class="btn btn-outline-warning" onclick="return confirm('Réinitialiser la progression ?');">
+                    <i class="fa-solid fa-arrow-rotate-left me-1"></i> Réinitialiser
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- E-learning Progress Status -->
+    <div class="col-lg-6 mb-4">
+        <div class="card-glass p-4 h-100">
+            <h4 class="text-white mb-3"><i class="fa-solid fa-graduation-cap text-primary me-2"></i> Progression E-learning</h4>
+            {% if progress_data %}
+                <div class="space-y-4">
+                    {% for item in progress_data %}
+                        <div>
+                            <div class="flex justify-between items-center mb-1 text-sm text-white">
+                                <span class="font-semibold">{{ item.training.title }}</span>
+                                <span>{{ item.progress }}%</span>
+                            </div>
+                            <div class="w-full bg-white/[0.05] rounded-full h-2">
+                                <div class="bg-primary-custom h-2 rounded-full" style="width: {{ item.progress }}%;"></div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted-custom mb-0">Aucune formation d'e-learning commencée.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quiz History Results -->
+    <div class="col-lg-6 mb-4">
+        <div class="card-glass p-4 h-100">
+            <h4 class="text-white mb-3"><i class="fa-solid fa-square-poll-vertical text-primary me-2"></i> Résultats aux Quiz</h4>
+            {% if submissions %}
+                <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="text-muted-custom">
+                                <th>Date</th>
+                                <th>Quiz / Module</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sub in submissions %}
+                                <tr>
+                                    <td class="text-white small">{{ sub.submitted_at|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <div class="text-white text-sm font-semibold">{{ sub.quiz.title }}</div>
+                                        <span class="text-muted-custom small">{{ sub.quiz.module.title }}</span>
+                                    </td>
+                                    <td class="font-bold {% if sub.passed %}text-success{% else %}text-danger{% endif %}">
+                                        {{ sub.score }}%
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted-custom mb-0">Aucune tentative de quiz enregistrée.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Downloads Log History -->
+    <div class="col-12 mb-4">
+        <div class="card-glass p-4">
+            <h4 class="text-white mb-3"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i> Historique des Téléchargements</h4>
+            {% if downloads %}
+                <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="text-muted-custom">
+                                <th>Date & Heure</th>
+                                <th>Support de cours</th>
+                                <th>Matière</th>
+                                <th>Type de ressource</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dl in downloads %}
+                                <tr>
+                                    <td class="text-white small">{{ dl.timestamp|date:"d/m/Y H:i:s" }}</td>
+                                    <td class="text-white font-semibold">{{ dl.resource.title }}</td>
+                                    <td class="text-white">{{ dl.resource.subject.name }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ dl.resource.get_resource_type_display }}</span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted-custom mb-0">Aucune ressource téléchargée par cet étudiant.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

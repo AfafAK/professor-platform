@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Mon Espace Étudiant - ProfPlatform{% endblock %}
+
+{% block content %}
+<div class="row animated-fade">
+    <div class="col-12 mb-4">
+        <div>
+            <span class="badge-custom">ESPACE ÉTUDIANT</span>
+            <h1 class="mt-2 text-gradient">Mon Tableau de Bord</h1>
+            <p class="text-muted-custom">Suivez l'état de vos formations en cours, téléchargez vos certificats et consultez vos résultats aux évaluations.</p>
+        </div>
+    </div>
+
+    <!-- Active Enrollments -->
+    <div class="col-lg-8 mb-4">
+        <h3 class="mb-3"><i class="fa-solid fa-graduation-cap text-primary me-2"></i> Mes Formations en Cours</h3>
+        <div class="row">
+            {% if enrolled_trainings %}
+                {% for item in enrolled_trainings %}
+                    <div class="col-md-12 mb-3">
+                        <div class="card-glass p-4 h-100">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+                                <h4 class="h5 mb-0 text-white">{{ item.obj.title }}</h4>
+                                <span class="badge bg-secondary">{{ item.progress }}% complété</span>
+                            </div>
+
+                            <div class="progress-container mb-3">
+                                <div class="progress-bar-custom" style="width: {{ item.progress }}%;"></div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small text-muted-custom">{{ item.obj.modules.count }} module(s) au total</span>
+                                <a href="/elearning/training/{{ item.obj.id }}/" class="btn btn-secondary-custom btn-sm">
+                                    <i class="fa-solid fa-arrow-right me-1"></i> Accéder
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="card-glass p-4 text-center">
+                        <p class="text-muted-custom mb-3">Vous n'êtes inscrit à aucune formation actuellement.</p>
+                        <a href="/elearning/" class="btn btn-primary-custom btn-sm">Découvrir le catalogue</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Quiz Attempts History -->
+        <h3 class="my-4"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i> Historique des Quiz</h3>
+        <div class="card-glass p-4">
+            {% if submissions %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr class="text-muted-custom">
+                                <th>Date de soumission</th>
+                                <th>Quiz / Module</th>
+                                <th>Score</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sub in submissions %}
+                                <tr>
+                                    <td>{{ sub.submitted_at|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ sub.quiz.title }} <span class="text-muted-custom small">({{ sub.quiz.module.title }})</span></td>
+                                    <td class="font-weight-bold {% if sub.passed %}text-success{% else %}text-danger{% endif %}">{{ sub.score }}%</td>
+                                    <td>
+                                        {% if sub.passed %}
+                                            <span class="badge bg-success bg-opacity-75 text-white">Réussi</span>
+                                        {% else %}
+                                            <span class="badge bg-danger bg-opacity-75 text-white">Échoué</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted-custom mb-0">Vous n'avez passé aucun quiz pour le moment.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Certificates Column -->
+    <div class="col-lg-4">
+        <h3 class="mb-3"><i class="fa-solid fa-award text-warning me-2"></i> Mes Certificats</h3>
+        <div class="row">
+            {% if certificates %}
+                {% for cert in certificates %}
+                    <div class="col-12 mb-3">
+                        <div class="card-glass border-success p-3 text-center" style="background: rgba(16, 185, 129, 0.02);">
+                            <i class="fa-solid fa-file-pdf text-success fs-1 mb-2"></i>
+                            <h5 class="h6 text-white">{{ cert.training.title }}</h5>
+                            <p class="small text-muted-custom mb-2">Délivré le {{ cert.issued_at|date:"d/m/Y" }}</p>
+                            <code class="d-block small text-secondary bg-dark bg-opacity-50 py-1 px-2 rounded border border-secondary mb-3">{{ cert.code|slice:":18" }}...</code>
+                            <a href="/elearning/certificate/{{ cert.id }}/download/" class="btn btn-success btn-sm w-100 font-weight-bold">
+                                <i class="fa-solid fa-download me-1"></i> Télécharger PDF
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="card-glass p-4 text-center">
+                        <p class="text-muted-custom mb-0">Complétez des formations pour obtenir des certificats académiques.</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

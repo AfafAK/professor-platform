@@ -1,0 +1,185 @@
+{% extends "analytics/prof/dashboard_layout.html" %}
+
+{% block subtitle %}Gestion E-learning{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active text-white" aria-current="page">E-learning & Quiz</li>
+{% endblock %}
+
+{% block prof_content %}
+<div class="row animated-fade">
+    <div class="col-12 mb-4 flex justify-between items-center flex-wrap gap-3">
+        <div>
+            <h2 class="text-white mt-0 mb-1">Parcours d'E-learning & Certificats</h2>
+            <p class="text-muted-custom mb-0 text-sm">Gérez les modules de cours vidéo/textuels, les évaluations sous forme de quiz et suivez les certificats délivrés.</p>
+        </div>
+        <a href="{% url 'create_training' %}" class="btn btn-primary-custom"><i class="fa-solid fa-plus me-2"></i> Créer Formation</a>
+    </div>
+
+    <!-- Trainings & Modules Accordion -->
+    <div class="col-lg-8 mb-4">
+        {% if trainings %}
+            <div class="space-y-4">
+                {% for t in trainings %}
+                    <div class="card-glass p-4">
+                        <!-- Training Header -->
+                        <div class="flex justify-between items-start flex-wrap gap-2 mb-3 pb-3 border-bottom border-white/[0.05]">
+                            <div class="flex gap-3">
+                                {% if t.obj.image %}
+                                    <img src="{{ t.obj.image.url }}" alt="{{ t.obj.title }}" class="w-14 h-14 rounded object-cover border border-secondary flex-shrink-0">
+                                {% else %}
+                                    <div class="w-14 h-14 rounded bg-primary flex items-center justify-center flex-shrink-0 text-white font-bold"><i class="fa-solid fa-graduation-cap"></i></div>
+                                {% endif %}
+                                <div>
+                                    <h4 class="text-white mb-1">{{ t.obj.title }}</h4>
+                                    <span class="text-muted-custom small">{{ t.modules|length }} module(s) • {{ t.certificates_count }} cert. délivré(s)</span>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-1.5">
+                                <a href="{% url 'create_module' t.obj.id %}" class="btn btn-sm btn-primary-custom" title="Ajouter un module"><i class="fa-solid fa-plus me-1"></i> Module</a>
+                                <a href="{% url 'edit_training' t.obj.id %}" class="btn btn-sm btn-secondary-custom" title="Modifier la formation"><i class="fa-solid fa-pen-to-square text-primary"></i></a>
+                                <form action="{% url 'delete_training' t.obj.id %}" method="post" class="d-inline" onsubmit="return confirm('Supprimer définitivement cette formation ? Tous les modules et quiz associés seront perdus.');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-secondary-custom" title="Supprimer"><i class="fa-solid fa-trash text-danger"></i></button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Modules List -->
+                        {% if t.modules %}
+                            <div class="space-y-2 mt-2" data-training-id="{{ t.obj.id }}">
+                                {% for m in t.modules %}
+                                    <div class="p-3 rounded bg-white/[0.02] border border-white/[0.04] flex justify-between items-center flex-wrap gap-3 module-row" data-id="{{ m.id }}">
+                                        <div class="flex items-center gap-3">
+                                            <i class="fa-solid fa-bars text-secondary cursor-move drag-handle" title="Faites glisser pour réordonner"></i>
+                                            <div>
+                                                <div class="text-white font-semibold text-sm">
+                                                    M{{ m.order }} : {{ m.title }}
+                                                    {% if m.video_url %}
+                                                        <i class="fa-solid fa-circle-play text-primary ms-1" title="Contenu Vidéo"></i>
+                                                    {% endif %}
+                                                </div>
+                                                <p class="text-muted-custom text-xs mb-0">{{ m.description|truncatewords:10 }}</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-center gap-2">
+                                            <!-- Quiz Controls -->
+                                            {% if m.quiz %}
+                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-1.5 px-2.5 rounded text-xs flex items-center gap-1.5">
+                                                    <i class="fa-solid fa-circle-question"></i> Quiz
+                                                    <a href="{% url 'manage_quiz_questions' m.quiz.id %}" class="text-info hover:text-white ms-1" title="Gérer les questions"><i class="fa-solid fa-clipboard-question"></i></a>
+                                                    <a href="{% url 'edit_quiz' m.quiz.id %}" class="text-primary hover:text-white ms-1" title="Modifier le Quiz"><i class="fa-solid fa-pen-to-square"></i></a>
+                                                    <form action="{% url 'delete_quiz' m.quiz.id %}" method="post" class="d-inline" onsubmit="return confirm('Supprimer le quiz de ce module ?');">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="text-danger hover:text-white bg-transparent border-0 ms-1 p-0" title="Supprimer Quiz"><i class="fa-solid fa-xmark"></i></button>
+                                                    </form>
+                                                </span>
+                                            {% else %}
+                                                <a href="{% url 'create_quiz' m.id %}" class="btn btn-xs btn-outline-info text-xs py-1 px-2"><i class="fa-solid fa-plus me-1"></i> Créer Quiz</a>
+                                            {% endif %}
+
+                                            <a href="{% url 'edit_module' m.id %}" class="btn btn-xs btn-secondary-custom" title="Modifier"><i class="fa-solid fa-pen-to-square text-primary"></i></a>
+                                            <form action="{% url 'delete_module' m.id %}" method="post" class="d-inline" onsubmit="return confirm('Supprimer ce module ?');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-xs btn-secondary-custom" title="Supprimer"><i class="fa-solid fa-trash text-danger"></i></button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted-custom small text-center mb-0 mt-3 py-2"><i class="fa-solid fa-circle-info me-1"></i> Aucun module ajouté à cette formation.</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5 card-glass">
+                <i class="fa-solid fa-graduation-cap fs-1 text-muted-custom mb-2"></i>
+                <p class="text-muted-custom">Aucune formation d'e-learning configurée.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Column: Recent Certificates -->
+    <div class="col-lg-4 mb-4">
+        <div class="card-glass p-4 h-100">
+            <h4 class="text-white mb-3"><i class="fa-solid fa-award text-warning me-2"></i> Certificats Académiques Délivrés</h4>
+            {% if recent_certificates %}
+                <div class="space-y-3" style="max-height: 480px; overflow-y: auto;">
+                    {% for cert in recent_certificates %}
+                        <div class="p-3 rounded bg-white/[0.02] border border-white/[0.04] flex items-center justify-between">
+                            <div>
+                                <div class="text-white font-bold text-sm">{{ cert.student.username }}</div>
+                                <div class="text-muted-custom text-xs truncate max-w-xs">{{ cert.training.title }}</div>
+                                <span class="text-muted-custom small font-mono" style="font-size: 0.65rem;">{{ cert.code|slice:":20" }}...</span>
+                            </div>
+                            <span class="text-muted-custom small text-xs">{{ cert.issued_at|date:"d/m/Y" }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4 text-muted-custom">
+                    <i class="fa-solid fa-circle-xmark fs-3 mb-2"></i>
+                    <p class="mb-0">Aucun certificat généré pour l'instant.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block prof_js %}
+<!-- Sortable.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Find all module lists and configure drag-and-drop sorting
+        const trainingContainers = document.querySelectorAll("[data-training-id]");
+
+        trainingContainers.forEach(container => {
+            new Sortable(container, {
+                handle: '.drag-handle',
+                animation: 150,
+                onEnd: function() {
+                    const rows = container.querySelectorAll(".module-row");
+                    const orders = [];
+
+                    rows.forEach((row, index) => {
+                        const newOrder = index + 1;
+                        orders.push({
+                            id: parseInt(row.getAttribute("data-id")),
+                            order: newOrder
+                        });
+                        // update label temporarily
+                        const label = row.querySelector(".text-white");
+                        if(label) {
+                            const oldText = label.innerText;
+                            const titlePart = oldText.split(':').slice(1).join(':').trim();
+                            label.innerHTML = `M${newOrder} : ${titlePart}`;
+                        }
+                    });
+
+                    // Ajax POST request to save new orders
+                    fetch("{% url 'reorder_modules' %}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        body: JSON.stringify({ orders: orders })
+                    }).then(res => res.json())
+                    .then(data => {
+                        if (!data.success) {
+                            alert("Une erreur s'est produite lors de la réorganisation : " + data.error);
+                            window.location.reload();
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
