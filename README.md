@@ -1,252 +1,164 @@
-\# Professor Platform
 
+# Professor Platform
 
+A web-based educational management platform developed with **Django**. The application provides a centralized environment for managing courses, students, online learning activities, academic content, research projects, and appointments.
 
-A web-based educational management platform developed with Django. The project aims to provide professors with a centralized environment to manage educational activities, courses, students, learning resources, and academic content.
+## Project Overview
 
+Professor Platform is designed to support academic activities through dedicated interfaces for students and administrators.
 
+## Main Features
 
-\## Project Overview
+- **Dashboard:** Overview of academic activities.
+- **Course Management:** Course catalog and course details.
+- **E-Learning:** Online training, learning progress, and quizzes.
+- **Student Area:** Student dashboard and learning activities.
+- **Certificates:** Certificate of successful completion.
+- **Research:** Scientific publications and research projects.
+- **Administration:** User management and appointment management.
+- **Contact:** Contact form and communication interface.
 
+## Screenshots
 
+### 1. Public Interface and Courses
 
-Professor Platform is a Django-based web application designed to support academic and educational management through dedicated interfaces for professors and students.
+![Home Page](screenshots/Fig11_Page_accueil.jpg)
 
+![Course Catalog](screenshots/Fig12_Catalogue_des_cours.jpg)
 
+![Course Details](screenshots/Fig13_Details_d_un_cours.jpg)
 
-\## Main Modules
+![Online Training Catalog](screenshots/Fig14_Catalogue_des_formations_en_ligne.jpg)
 
+### 2. Student Learning Area
 
+![Training Progress](screenshots/Fig15_Suivi_d_une_formation.jpg)
 
-\- \*\*Dashboard:\*\* Academic activity overview and management interface.
+![Quiz Interface](screenshots/Fig16_Interface_du_quiz.jpg)
 
-\- \*\*Student Management:\*\* Student information and student-related pages.
+![Student Dashboard](screenshots/Fig17_Tableau_de_bord_etudiant.jpg)
 
-\- \*\*Course Management:\*\* Create and manage courses and educational modules.
+![Certificate](screenshots/Fig18_Certificat_de_reussite.jpg)
 
-\- \*\*E-Learning:\*\* Online training, learning modules, quizzes, and results.
+### 3. Research and Academic Content
 
-\- \*\*Research:\*\* Research-related content and publications.
+![Scientific Publications](screenshots/Fig19_Publications_scientifiques.jpg)
 
-\- \*\*Resource Management:\*\* Educational resources and materials.
+![Research Projects](screenshots/Fig20_Projets_de_recherche.jpg)
 
-\- \*\*Appointment Management:\*\* Appointment-related interfaces.
+### 4. Administration Area
 
-\- \*\*Notifications:\*\* Notification management.
+![Administration Dashboard](screenshots/Fig21_Tableau_de_bord_administration.jpg)
 
-\- \*\*Contact Management:\*\* Contact messages and communication pages.
+![User and Appointment Management](screenshots/Fig22_Gestion_des_utilisateurs_et_rendez-vous.jpg)
 
+![Contact Form](screenshots/Fig23_Formulaire_de_contact.jpg)
 
+![Appointment Calendar](screenshots/Fig24_Calendrier_de_rendez-vous_admin.jpg)
 
-\*Note: These modules describe the project interfaces and implemented components; individual features may require further functional testing.\*
+## Technologies Used
 
+- Python
+- Django 6.0.5
+- SQLite
+- HTML5
+- CSS3
+- JavaScript
+- Matplotlib
+- python-dotenv
 
-
-\## Technologies Used
-
-
-
-\- Python
-
-\- Django 6.0.5
-
-\- SQLite
-
-\- HTML5
-
-\- CSS3
-
-\- JavaScript
-
-\- Matplotlib
-
-\- python-dotenv
-
-
-
-\## Project Structure
-
-
+## Project Structure
 
 ```text
-
 professor-platform/
-
-│
-
 ├── analytics/
-
 ├── core/
-
 ├── courses/
-
 ├── elearning/
-
-├── platform\_prof/
-
+├── platform_prof/
 ├── research/
-
 ├── scheduler/
-
 ├── static/
-
 │   └── css/
-
 ├── templates/
-
+├── screenshots/
 ├── manage.py
-
 ├── requirements.txt
-
 └── .gitignore
-
 ```
 
+## Installation
 
-
-\## Installation
-
-
-
-\### 1. Clone the repository
-
-
+### 1. Clone the repository
 
 ```bash
-
 git clone https://github.com/AfafAK/professor-platform.git
-
 cd professor-platform
-
 ```
 
-
-
-\### 2. Create a virtual environment
-
-
+### 2. Create a virtual environment
 
 ```bash
-
 python -m venv .venv
-
 ```
-
-
 
 Activate it on Windows:
 
-
-
 ```bash
-
-.venv\\Scripts\\activate
-
+.venv\Scripts\activate
 ```
 
-
-
-\### 3. Install dependencies
-
-
+### 3. Install dependencies
 
 ```bash
-
 pip install -r requirements.txt
-
 ```
 
-
-
-\### 4. Configure environment variables
-
-
+### 4. Configure environment variables
 
 Create a `.env` file in the project root directory:
 
-
-
 ```env
-
-SECRET\_KEY=replace-with-your-secret-key
-
+SECRET_KEY=replace-with-your-secret-key
 DEBUG=True
-
-ALLOWED\_HOSTS=localhost,127.0.0.1
-
-SECURE\_SSL\_REDIRECT=False
-
+ALLOWED_HOSTS=localhost,127.0.0.1
+SECURE_SSL_REDIRECT=False
 ```
-
-
 
 Never publish your actual secret key or other credentials.
 
-
-
-\### 5. Apply database migrations
-
-
+### 5. Apply database migrations
 
 ```bash
-
 python manage.py migrate
-
 ```
 
-
-
-\### 6. Run the development server
-
-
+### 6. Run the development server
 
 ```bash
-
 python manage.py runserver
-
 ```
-
-
 
 Open your browser at:
 
-
-
 http://127.0.0.1:8000/
 
+## Security
 
+- Environment-based configuration using python-dotenv.
+- Secret key stored outside the source code.
+- Debug mode configurable through environment variables.
+- Sensitive files excluded using `.gitignore`.
+- Django security middleware and password validators.
 
-\## Security
-
-
-
-\- Environment-based configuration using python-dotenv.
-
-\- Secret key stored outside the source code.
-
-\- Debug mode configurable through environment variables.
-
-\- Sensitive files excluded using `.gitignore`.
-
-\- Django security middleware and password validators.
-
-
-
-\## Project Status
-
-
+## Project Status
 
 The project is under development and subject to continued testing, improvements, and documentation.
 
+## Author
 
+**Afaf Ait Khouya**
 
-\## Author
+GitHub: [AfafAK](https://github.com/AfafAK)
 
-
-
-\*\*Afaf Ait Khouya\*\*
-
-
-
-GitHub: https://github.com/AfafAK
-
+Repository: [Professor Platform](https://github.com/AfafAK/professor-platform)
